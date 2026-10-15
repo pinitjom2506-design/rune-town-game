@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v50 — Pixel Art 3D</title>
+<title>Rune Town v51 — Rebuilt Pixel Art 3D</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL 3D v50</strong>
+<strong>⚔️ RUNE TOWN — PIXEL 3D v51</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game"><div id="renderMode" style="position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:6;background:#16283bdc;color:#fff4cc;padding:4px 9px;border:1px solid #ffe09c;border-radius:6px;font:12px Tahoma,Arial;pointer-events:none">กำลังโหลดฉาก 3D...</div>
@@ -752,13 +752,13 @@ function initTown3D(){
  try{
  const T=THREE, scene=new T.Scene();scene.background=new T.Color(0x8ec9f3);
  const camera=new T.OrthographicCamera(-24,24,15,-15,.1,200);
- camera.position.set(0,35,25);camera.lookAt(0,0,0);
+ camera.position.set(0,30,32);camera.lookAt(0,1,0);
  const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setSize(640,400,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.82;
+ renderer.setSize(960,600,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
  renderer.shadowMap.enabled=false;
  renderer.outputColorSpace=T.SRGBColorSpace;
- scene.add(new T.HemisphereLight(0xddeeff,0x786c59,.68));
- const sun=new T.DirectionalLight(0xffe7c1,1.15);sun.position.set(-13,32,16);sun.castShadow=false;sun.shadow.mapSize.set(512,512);
+ scene.add(new T.HemisphereLight(0xddeeff,0x786c59,.82));
+ const sun=new T.DirectionalLight(0xffd69b,1.4);sun.position.set(-13,32,16);sun.castShadow=false;sun.shadow.mapSize.set(512,512);
  sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;sun.shadow.bias=-.0004;scene.add(sun);
  const mat=(color,roughness=1,metalness=0)=>new T.MeshStandardMaterial({color,roughness,metalness});
  // Crisp hand-painted pixel textures applied to actual 3D geometry.
@@ -815,35 +815,79 @@ function initTown3D(){
   const x=-14+col*1.12+(row%2)*.56;
   const block=cube(x,.45+row*.7,-13.55,1.08,.035,.09,row%3?stoneLight:stoneDark);block.castShadow=false;
  }
- // Real open gate through a recessed dark arch, with raised side piers and lintel.
- cube(0,3.1,-13.2,8,6.2,.22,mat(0x354755));
- for(let xx of [-5,5])cube(xx,5,-12.7,2,10,2.2,stoneLight);
- cube(0,9,-12.7,12,2,2.4,stoneLight);
+ // Deep arched castle gateway built from 3D voussoir blocks, not a rectangular wall.
+ const gateDepth=3.0,gateZ=-12.1,gateRadius=4.5,archBase=4.0;
+ const archShadow=mat(0x273944),gateTrim=mat(0xa4937e),innerWall=mat(0x657484);
+ cube(0,2.0,gateZ-.8,8.9,4,.3,archShadow);
+ for(let xx of [-5.35,5.35]){
+  cube(xx,4.0,gateZ,2.1,8.0,gateDepth,stone);
+  cube(xx,4.0,gateZ+1.55,1.1,7.6,.14,gateTrim);
+  for(let h=0;h<8;h++)cube(xx,1+h*.85,gateZ+1.65,1.55,.08,.18,stoneDark);
+ }
+ for(let i=0;i<=22;i++){
+  const a=Math.PI-i*Math.PI/22;
+  const x=Math.cos(a)*gateRadius,y=archBase+Math.sin(a)*gateRadius;
+  const block=cube(x,y,gateZ,1.05,1.0,gateDepth,stoneLight);
+  block.rotation.z=a-Math.PI/2;
+  const rim=cube(x,y,gateZ+1.65,1.1,.32,.16,gateTrim);
+  rim.rotation.z=a-Math.PI/2;
+ }
+ for(let xx of [-6.6,6.6])cube(xx,9.0,gateZ,2.3,2.2,gateDepth,stone);
+ cube(0,9.4,gateZ,7,1.1,gateDepth,stone);
+ for(let i=0;i<9;i++)cube(-5.5+i*1.38,10.35,gateZ,.95,1.25,2.5,stoneLight);
+ // Walkable-looking passage and royal blue carpet.
+ cube(0,.13,-10.8,7.6,.14,7,stoneDark);
+ cube(0,.23,-10.5,3.3,.045,6.2,blue);
+ for(let i=0;i<9;i++){cube(-1.7,.26,-13+i*.65,.13,.03,.5,gold);cube(1.7,.26,-13+i*.65,.13,.03,.5,gold)}
+
  for(let xx of [-8.2,8.2]){
   cylinder(xx,5.4,-13,2.35,2.5,10.8,stone,24);
   cylinder(xx,10.9,-13,2.7,2.7,.65,stoneDark,24);
   for(let i=0;i<12;i++){const a=i*Math.PI/6;cylinder(xx+Math.cos(a)*2.15,11.4,-13+Math.sin(a)*2.15,.4,.4,1.1,stoneLight,8)}
   for(let row=0;row<10;row++)cylinder(xx,.6+row, -13,2.38,2.38,.045,row%2?stoneDark:stoneLight,24);
+  for(let level=0;level<3;level++){const y=3+level*2.5;cube(xx,y,-10.55,.48,1.2,.17,archShadow);cube(xx,y+.68,-10.51,.62,.15,.15,stoneLight)}
  }
  // Central heraldic sign.
  const shield=cube(0,8.3,-11.3,2.1,2.8,.23,blue);
  cube(0,8.3,-11.14,.25,2.3,.14,gold);cube(0,8.35,-11.1,1.6,.25,.14,gold);
  // Timber framed houses and pitched red tiled roofs.
  function house(x,z,w,d,h){
+  // Timber-and-stone building with true triangular roof silhouette.
   cube(x,h/2,z,w,h,d,plaster);
-  for(let dx of [-w/2+.2,w/2-.2])for(let dz of [-d/2+.2,d/2-.2])cube(x+dx,h/2,z+dz,.28,h,.28,wood);
-  for(let yy=1.6;yy<h;yy+=2.1){cube(x,yy,z+d/2+.04,w,.22,.14,wood)}
-  for(let i=-1;i<=1;i++){const xx=x+i*w*.27;cube(xx,h*.55,z+d/2+.11,.8,1.5,.12,mat(0x537c8e));cube(xx,h*.55,z+d/2+.19,.12,1.6,.1,wood)}
-  const roofTop=h+2.1,roofWidth=w+1.5;
-  for(let side of [-1,1]){
-   const slope=cube(x+side*roofWidth*.24,h+1,z,roofWidth*.56,.18,d+1.2,roof);
-   slope.rotation.z=side*.60;
-   for(let k=-4;k<=4;k++){
-    const strip=cube(x+side*roofWidth*.24,h+1.04,z+k*(d+1)/9,roofWidth*.55,.035,.08,roofLight);
-    strip.rotation.z=side*.60;strip.castShadow=false;
+  cube(x,.48,z+d/2+.07,w,.96,.16,stone);
+  for(let dx of [-w/2+.2,w/2-.2])for(let dz of [-d/2+.2,d/2-.2])cube(x+dx,h/2,z+dz,.3,h,.3,wood);
+  for(let yy=1.6;yy<h;yy+=2.1)cube(x,yy,z+d/2+.08,w,.23,.18,wood);
+  for(let i=-1;i<=1;i++){
+   const xx=x+i*w*.27;
+   cube(xx,h*.57,z+d/2+.17,.95,1.65,.2,stoneDark);
+   cube(xx,h*.57,z+d/2+.29,.7,1.36,.12,mat(0x6fa0a9));
+   cube(xx,h*.57,z+d/2+.36,.12,1.4,.08,wood);
+   cube(xx,h*.57,z+d/2+.36,.75,.12,.08,wood);
+   cube(xx,h*.57-.62,z+d/2+.39,.82,.15,.2,stoneLight);
+  }
+  // Roof surfaces slope about their ridge in the depth axis, unlike vertical walls.
+  const rise=2.4,half=w/2+.85,roofLength=Math.hypot(half,rise);
+  for(const side of [-1,1]){
+   const slope=cube(x+side*half/2,h+rise/2,z,roofLength,.24,d+1.1,roof);
+   slope.rotation.z=side*-Math.atan2(rise,half);
+   for(let k=0;k<9;k++){
+    const strip=cube(x+side*half/2,h+rise/2,z-d/2-.45+k*(d+1)/8,roofLength,.06,.10,roofLight);
+    strip.rotation.z=side*-Math.atan2(rise,half);
+   }
+   for(let j=0;j<6;j++){
+    const frac=(j+.5)/6;
+    const tx=x+side*(half*frac),ty=h+rise*(1-frac)+.14;
+    const ridge=cube(tx,ty,z, .15,.12,d+1,roofLight);
+    ridge.rotation.z=side*-Math.atan2(rise,half);
    }
   }
-  cube(x,roofTop,z,.28,.35,d+1.2,stoneDark);
+  cube(x,h+rise+.06,z,.35,.32,d+1.25,stoneDark);
+  // Bright shop windows and planters on the front facade.
+  for(const xx of [x-w*.32,x+w*.32]){
+   cube(xx,1.3,z+d/2+.31,.9,1.15,.13,mat(0xd99a4b));
+   cube(xx,1.3,z+d/2+.39,.12,1.15,.09,wood);
+   cube(xx,1.3,z+d/2+.39,.9,.12,.09,wood);
+  }
  }
  house(-20,-5,10,12,5.5);house(20,-5,10,12,5.5);
  house(-21,10,10,10,5);house(21,10,10,10,5);
@@ -877,6 +921,16 @@ function initTown3D(){
   const wing=add(new T.ConeGeometry(1.1,3.4,4),stoneLight,fx+side*1.25,2.8,fz);
   wing.rotation.z=side*.65;
  }
+ // Stone fountain spouts, layered basins and translucent splashes.
+ cylinder(fx,2.2,fz,1.25,1.25,.25,stoneLight,16);
+ cylinder(fx,3.15,fz,.58,.78,1.8,stone,12);
+ cylinder(fx,4.05,fz,1.1,.5,.35,stoneLight,16);
+ for(let i=0;i<12;i++){
+  const a=i*Math.PI/6;
+  const px=fx+Math.cos(a)*2.55,pz=fz+Math.sin(a)*2.55;
+  const sparkle=cube(px,1.15,pz,.13,.17,.14,mat(i%3?0x92e9fa:0xe7ffff));
+  sparkle.rotation.y=a;
+ }
  // Flower beds and wrought iron railings.
  for(let i=0;i<46;i++){
   const a=i*Math.PI*2/46,rr=5.6+rand(i*5)*.65;
@@ -885,8 +939,22 @@ function initTown3D(){
   add(new T.SphereGeometry(.12,6,5),i%4?mat(0xf7e5d5):mat(0xf2b64e),x,.7,z);
  }
  for(let i=0;i<28;i++){const a=i*Math.PI*2/28;const x=fx+Math.cos(a)*5.2,z=fz+Math.sin(a)*5.2;cylinder(x,.75,z,.075,.075,1.5,stoneDark,6)}
+ // Flowered climbing ivy and crenellated wall detailing.
+ for(let i=0;i<65;i++){
+  const x=-14+rand(i*9)*28,z=-12.2+rand(i*13)*.6,y=1+rand(i*17)*7;
+  if(Math.abs(x)<5.5)continue;
+  const vine=cube(x,y,z,.32,.25,.23,i%3?leaf:leafLight);
+  vine.rotation.z=rand(i*19)*.7;
+ }
  // Lanterns and blue royal banners.
- function lamp(x,z){cylinder(x,2,z,.09,.14,4,stoneDark,8);cube(x,4.2,z,.65,.75,.65,gold);cube(x,4.7,z,.85,.13,.85,stoneDark)}
+ function lamp(x,z){
+  cylinder(x,2,z,.09,.14,4,stoneDark,8);
+  cube(x,4.2,z,.66,.8,.66,stoneDark);
+  cube(x,4.2,z+.35,.43,.56,.08,mat(0xffd782));
+  cube(x,4.2,z-.35,.43,.56,.08,mat(0xffd782));
+  cube(x,4.7,z,.85,.16,.85,gold);
+  add(new T.ConeGeometry(.56,.45,4),stoneDark,x,4.98,z);
+ }
  for(const [x,z] of [[-12,0],[12,0],[-5,10],[15,13]])lamp(x,z);
  for(const [x,z] of [[-6,-11],[6,-11],[17,0]]){
   cube(x,4.6,z,1.4,2.6,.12,blue);
@@ -931,7 +999,7 @@ function initTown3D(){
   cube(fx+Math.cos(a)*r,.94,fz+Math.sin(a)*r,.12,.02,.16,i%3?flowerWhite:mat(0x7ad9f5));
  }
 
- scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ Pixel Art 3D';
+ scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ Pixel Art 3D v51';
  }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null;document.getElementById('renderMode').textContent='⚠ 2D สำรอง (WebGL ไม่พร้อม)'}
 }
 function drawTown3D(){
