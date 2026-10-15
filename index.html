@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v46 — 3D Town</title>
+<title>Rune Town v47 — Top-Down 3D</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — 3D TOWN v46</strong>
+<strong>⚔️ RUNE TOWN — TOP-DOWN 3D v47</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -744,6 +744,132 @@ g.moveTo(x-18,y);g.lineTo(x+w/2,y-72);
 g.lineTo(x+w+18,y);g.fill();
 }
 
+
+let scene3D=null, renderer3D=null, camera3D=null, water3D=null;
+function initTown3D(){
+ if(!window.THREE||scene3D)return;
+ try{
+ const T=THREE, scene=new T.Scene();scene.background=new T.Color(0x8ec9f3);
+ const camera=new T.OrthographicCamera(-24,24,15,-15,.1,200);
+ camera.position.set(0,35,25);camera.lookAt(0,0,0);
+ const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+ renderer.setSize(960,600,false);renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+ renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+ renderer.outputColorSpace=T.SRGBColorSpace;
+ scene.add(new T.HemisphereLight(0xe8f5ff,0x987c56,2.0));
+ const sun=new T.DirectionalLight(0xfff1cf,3.0);sun.position.set(-13,32,16);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+ sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;sun.shadow.bias=-.0004;scene.add(sun);
+ const mat=(color,roughness=1,metalness=0)=>new T.MeshStandardMaterial({color,roughness,metalness});
+ const stone=mat(0xc6b9a2),stoneLight=mat(0xe3d7bd),stoneDark=mat(0x827b70),wood=mat(0x74513c),plaster=mat(0xe9d5b1),roof=mat(0xa34e35),roofLight=mat(0xd87951),blue=mat(0x2d5c9a),gold=mat(0xe9bc55,.42,.6),leaf=mat(0x4f9d55),leafLight=mat(0x8cbd67),water=mat(0x3cbedc,.18,.25);
+ const rand=(n)=>{const a=Math.sin(n*127.1+78.3)*43758.5453;return a-Math.floor(a)};
+ const add=(geometry,material,x,y,z,cast=true)=>{const mesh=new T.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=cast;mesh.receiveShadow=true;scene.add(mesh);return mesh};
+ const cube=(x,y,z,w,h,d,m)=>add(new T.BoxGeometry(w,h,d),m,x,y,z);
+ const cylinder=(x,y,z,r1,r2,h,m,segments=18)=>add(new T.CylinderGeometry(r1,r2,h,segments),m,x,y,z);
+ const ground=cube(0,-.3,0,51,.6,34,mat(0xc7b99d));
+ // Individual perspective-correct cobbles with varied height and color.
+ const paving=[mat(0xe8ddc8),mat(0xd3c5ad),mat(0xf0e5cf),mat(0xb8ab95)];
+ for(let row=0;row<49;row++)for(let col=0;col<74;col++){
+  const x=(col-37)*.69+(row%2)*.34,z=(row-24)*.69,n=rand(row*113+col*17);
+  const tile=cube(x,.012+n*.035,z,.65,.05,.64,paving[Math.floor(n*4)]);
+  tile.castShadow=false;
+ }
+ // Stone castle wall and tall towers at back of square.
+ cube(0,4.5,-14.8,29,9,2.4,stone);
+ for(let x=-14;x<=14;x+=1.25)cube(x,9.45,-14.8,.88,1.15,2.8,stoneLight);
+ for(let row=0;row<12;row++)for(let col=0;col<26;col++){
+  const x=-14+col*1.12+(row%2)*.56;
+  const block=cube(x,.45+row*.7,-13.55,1.08,.035,.09,row%3?stoneLight:stoneDark);block.castShadow=false;
+ }
+ // Real open gate through a recessed dark arch, with raised side piers and lintel.
+ cube(0,3.1,-13.2,8,6.2,.22,mat(0x354755));
+ for(let xx of [-5,5])cube(xx,5,-12.7,2,10,2.2,stoneLight);
+ cube(0,9,-12.7,12,2,2.4,stoneLight);
+ for(let xx of [-8.2,8.2]){
+  cylinder(xx,5.4,-13,2.35,2.5,10.8,stone,24);
+  cylinder(xx,10.9,-13,2.7,2.7,.65,stoneDark,24);
+  for(let i=0;i<12;i++){const a=i*Math.PI/6;cylinder(xx+Math.cos(a)*2.15,11.4,-13+Math.sin(a)*2.15,.4,.4,1.1,stoneLight,8)}
+  for(let row=0;row<10;row++)cylinder(xx,.6+row, -13,2.38,2.38,.045,row%2?stoneDark:stoneLight,24);
+ }
+ // Central heraldic sign.
+ const shield=cube(0,8.3,-11.3,2.1,2.8,.23,blue);
+ cube(0,8.3,-11.14,.25,2.3,.14,gold);cube(0,8.35,-11.1,1.6,.25,.14,gold);
+ // Timber framed houses and pitched red tiled roofs.
+ function house(x,z,w,d,h){
+  cube(x,h/2,z,w,h,d,plaster);
+  for(let dx of [-w/2+.2,w/2-.2])for(let dz of [-d/2+.2,d/2-.2])cube(x+dx,h/2,z+dz,.28,h,.28,wood);
+  for(let yy=1.6;yy<h;yy+=2.1){cube(x,yy,z+d/2+.04,w,.22,.14,wood)}
+  for(let i=-1;i<=1;i++){const xx=x+i*w*.27;cube(xx,h*.55,z+d/2+.11,.8,1.5,.12,mat(0x537c8e));cube(xx,h*.55,z+d/2+.19,.12,1.6,.1,wood)}
+  const roofTop=h+2.1,roofWidth=w+1.5;
+  for(let side of [-1,1]){
+   const slope=cube(x+side*roofWidth*.24,h+1,z,roofWidth*.56,.18,d+1.2,roof);
+   slope.rotation.z=side*.60;
+   for(let k=-4;k<=4;k++){
+    const strip=cube(x+side*roofWidth*.24,h+1.04,z+k*(d+1)/9,roofWidth*.55,.035,.08,roofLight);
+    strip.rotation.z=side*.60;strip.castShadow=false;
+   }
+  }
+  cube(x,roofTop,z,.28,.35,d+1.2,stoneDark);
+ }
+ house(-20,-5,10,12,5.5);house(20,-5,10,12,5.5);
+ house(-21,10,10,10,5);house(21,10,10,10,5);
+ // Blue-and-white canvas market stalls.
+ function stall(x,z){
+  for(let dx of [-2.6,2.6])for(let dz of [-1.6,1.6])cube(x+dx,1.3,z+dz,.19,2.6,.19,wood);
+  cube(x,1.3,z,5.5,.23,3.5,wood);
+  for(let i=0;i<8;i++)cube(x-2.45+i*.7,3.05,z,.7,.17,4,i%2?stoneLight:blue);
+  for(let i=0;i<8;i++)cube(x-2.45+i*.7,1.7,z+1.2,.42,.35,.45,i%2?gold:mat(0xb35c3c));
+ }
+ stall(-16,6);stall(16,6);
+ // 3D trees with trunks and dense spherical canopies.
+ function tree(x,z,r){
+  cylinder(x,2,z,.34,.46,4,wood,9);
+  for(let i=0;i<18;i++){
+   const a=i*2.4,rr=rand(i+x*3)*r*.7;
+   const sphere=add(new T.SphereGeometry(r*(.36+rand(i*7)*.17),9,7),i%3?leaf:leafLight,x+Math.cos(a)*rr,4.3+rand(i*4)*1.5,z+Math.sin(a)*rr);
+   sphere.scale.y=.75;
+  }
+ }
+ tree(-12,-9,2.5);tree(12,-9,2.8);tree(-22,13,3.5);tree(22,13,3.6);
+ // Circular stone fountain and sculptural statue.
+ const fx=9,fz=8;
+ cylinder(fx,.32,fz,4.7,4.7,.65,stoneDark,48);
+ cylinder(fx,.73,fz,4.3,4.3,.25,stoneLight,48);
+ water3D=cylinder(fx,.88,fz,3.9,3.9,.09,water,48);water3D.castShadow=false;
+ cylinder(fx,1.05,fz,1.05,1.3,.5,stoneLight,16);
+ cylinder(fx,2.1,fz,.4,.65,1.8,stoneLight,12);
+ add(new T.SphereGeometry(.65,12,10),stoneLight,fx,3.25,fz);
+ for(let side of [-1,1]){
+  const wing=add(new T.ConeGeometry(1.1,3.4,4),stoneLight,fx+side*1.25,2.8,fz);
+  wing.rotation.z=side*.65;
+ }
+ // Flower beds and wrought iron railings.
+ for(let i=0;i<46;i++){
+  const a=i*Math.PI*2/46,rr=5.6+rand(i*5)*.65;
+  const x=fx+Math.cos(a)*rr,z=fz+Math.sin(a)*rr;
+  add(new T.SphereGeometry(.36,6,5),i%3?leaf:leafLight,x,.4,z);
+  add(new T.SphereGeometry(.12,6,5),i%4?mat(0xf7e5d5):mat(0xf2b64e),x,.7,z);
+ }
+ for(let i=0;i<28;i++){const a=i*Math.PI*2/28;const x=fx+Math.cos(a)*5.2,z=fz+Math.sin(a)*5.2;cylinder(x,.75,z,.075,.075,1.5,stoneDark,6)}
+ // Lanterns and blue royal banners.
+ function lamp(x,z){cylinder(x,2,z,.09,.14,4,stoneDark,8);cube(x,4.2,z,.65,.75,.65,gold);cube(x,4.7,z,.85,.13,.85,stoneDark)}
+ for(const [x,z] of [[-12,0],[12,0],[-5,10],[15,13]])lamp(x,z);
+ for(const [x,z] of [[-6,-11],[6,-11],[17,0]]){
+  cube(x,4.6,z,1.4,2.6,.12,blue);
+  cube(x,5.65,z,1.1,.15,.15,gold);
+  cube(x,4.65,z,.16,1.7,.16,gold);
+ }
+ scene3D=scene;renderer3D=renderer;camera3D=camera;
+ }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null}
+}
+function drawTown3D(){
+ if(!scene3D||!renderer3D){drawTownBackdrop();return}
+ try{
+ if(water3D){water3D.rotation.y=tick*.003;water3D.material.emissive.setHex(0x0a3440);water3D.material.emissiveIntensity=.15+Math.sin(tick*.04)*.08}
+ renderer3D.render(scene3D,camera3D);
+ g.drawImage(renderer3D.domElement,0,0,960,600);
+ }catch(e){console.warn(e);renderer3D=null;drawTownBackdrop()}
+}
+
 let townBackdrop=null;
 function drawTownBackdrop(){
  if(!townBackdrop){
@@ -971,7 +1097,7 @@ mobs.forEach(m=>{
    }
  }
 });
-drawTownBackdrop();
+drawTown3D();
 npcs.forEach(drawNPC);
 mobs.forEach(m=>{
 if(!m.alive){
@@ -1052,6 +1178,7 @@ requestAnimationFrame(draw)
 }
 draw();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js" onload="initTown3D()" onerror="console.warn('Three.js unavailable: using 2D fallback')"></script>
 </body>
 </html>
 
