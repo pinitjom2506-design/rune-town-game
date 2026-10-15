@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v32</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v33</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -244,8 +244,8 @@ $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ${swords[p.weapon]?.name||
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
-$('skillBtn').disabled=p.lv<2||p.weapon!=='normal';
-$('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':p.weapon!=='normal'?'สกิลนี้ใช้ได้เฉพาะดาบธรรมดา':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
+$('skillBtn').disabled=p.lv<2||!['normal','gold'].includes(p.weapon);
+$('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':p.weapon==='gold'?'กด C: พายุคมดาบทอง ฟันรัวรอบตัว (คูลดาวน์ 8 วินาที)':p.weapon!=='normal'?'สกิลยังไม่พร้อมสำหรับดาบนี้':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
 $('quest').textContent=p.activeQuest===1?`เควส 1: Poring ${Math.min(5,p.kills)}/5`:p.activeQuest===2?`เควส 2: กระต่าย ${Math.min(3,p.rabbitKills)}/3`:'เควส: คุยกับ NPC เพื่อเลือกเควส';
 }
 function revive(){p.hp=p.max;p.x=480;p.y=340;dead=false;invulnerable=120;say('ฟื้นคืนชีพแล้ว! ได้รับการคุ้มครองชั่วคราว');updateHUD()}
@@ -355,13 +355,48 @@ function attack(){
  damageMonster(m,damage);
  if(m.alive)say('โจมตี '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! '+damage+' DMG');
 }
+let goldenSkill=null;
+function drawGoldenSkill(){
+ if(!goldenSkill)return;
+ const fx=goldenSkill;
+ fx.frame++;
+ if(fx.frame%5===1&&fx.hits<8){
+  fx.hits++;
+  const damage=Math.round(swords.gold.damage*levelDamageMultiplier()*0.75);
+  for(const m of mobs)if(m.alive&&Math.hypot(m.x-fx.x,m.y-fx.y)<175)damageMonster(m,damage);
+ }
+ const t=fx.frame;
+ g.save();g.translate(fx.x,fx.y-28);g.globalCompositeOperation='lighter';
+ for(let i=0;i<5;i++){
+  const a=t*.22+i*Math.PI*2/5;
+  const r=55+i*23+Math.sin(t*.19+i)*12;
+  g.beginPath();g.arc(0,0,r,a,a+1.8);
+  g.strokeStyle=i%2?'#ffae21':'#fff5a0';g.lineWidth=17-i*2;g.shadowColor='#ffbc2e';g.shadowBlur=20;g.stroke();
+  g.beginPath();g.arc(0,0,r,a+.15,a+1.65);
+  g.strokeStyle='#fffbe1';g.lineWidth=3;g.stroke();
+ }
+ for(let i=0;i<24;i++){
+  const a=i*2.399+t*.16,rr=(i*29+t*7)%180;
+  g.fillStyle=i%3?'#ffc044':'#fff6d4';
+  g.fillRect(Math.cos(a)*rr,Math.sin(a)*rr*.7,3+(i%4),3+(i%4));
+ }
+ g.restore();
+ if(t>=42)goldenSkill=null;
+}
 function useSkill(){
  if(dead){say('ไม่สามารถใช้สกิลขณะหมดสติ');return}
  if(p.lv<2){say('🔒 สกิลคลื่นดาบปลดล็อกที่เลเวล 2');return}
- if(p.weapon!=='normal'){say('⚔️ สกิลคลื่นดาบใช้ได้เฉพาะดาบธรรมดาเท่านั้น');return}
+ if(!['normal','gold'].includes(p.weapon)){say('⚔️ ดาบนี้ยังไม่มีสกิลเฉพาะ');return}
  if($('inventory').classList.contains('open')||$('shop').classList.contains('open')||$('questMenu').classList.contains('open'))return;
  const now=Date.now();
  if(now<skillReadyAt){say('สกิลกำลังคูลดาวน์ อีก '+Math.ceil((skillReadyAt-now)/1000)+' วินาที');return}
+ if(p.weapon==='gold'){
+  skillReadyAt=now+8000;
+  goldenSkill={x:p.x,y:p.y,frame:0,hits:0};
+  invulnerable=Math.max(invulnerable,65);
+  say('✨ พายุคมดาบทอง! ฟันรัวรอบตัว 8 ครั้ง!');
+  return;
+ }
  skillReadyAt=now+6000;
  const sx=p.x,sy=p.y;
  // Forward dash and broad blue crescent, matching the reference's action pose.
@@ -689,6 +724,7 @@ if(slash&&slash.life>0){
  if(slash.life===0)slash=null;
 }
 
+drawGoldenSkill();
 updateHUD();
 requestAnimationFrame(draw)
 }
