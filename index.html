@@ -44,7 +44,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v23</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v24</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -96,6 +96,7 @@ alive:true,hp:100,maxHp:100,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0
 }));
 // One additional plant-element rabbit, independent of the five Poring.
 mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:70,vx:0,vy:0});
+mobs.push({x:725,y:525,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:95,vx:0,vy:0});
 function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
 const MAX_LEVEL=550;
@@ -136,12 +137,13 @@ function completeQuest(){
  if(!id)return false;
  const goal=id===1?5:3;
  if((id===1?p.kills:p.rabbitKills)<goal)return false;
- const questExp=p.lv>=MAX_LEVEL?0:Math.round(500*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1)*levelExpMultiplier());
- p.zeny+=200;p.exp+=questExp;
+ const questExp=p.lv>=MAX_LEVEL?0:Math.round((id===2?1000:500)*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1)*levelExpMultiplier());
+ const questZeny=id===2?500:200;
+ p.zeny+=questZeny;p.exp+=questExp;
  while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
  if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
  p.kills=0;p.rabbitKills=0;p.activeQuest=0;
- say('🎉 เควส '+id+' สำเร็จ! ได้รับรางวัลอัตโนมัติ +200 Zeny และ +'+questExp+' EXP');
+ say('🎉 เควส '+id+' สำเร็จ! ได้รับรางวัลอัตโนมัติ +'+questZeny+' Zeny และ +'+questExp+' EXP');
  updateHUD();saveSilent();return true;
 }
 function chooseQuest(id){
