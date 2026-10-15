@@ -23,7 +23,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — Fantasy RPG</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v3</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -129,26 +129,68 @@ g.font=`bold ${size}px monospace`;g.textAlign='center';
 g.lineWidth=3;g.strokeStyle='#34333c';g.strokeText(t,x,y);
 g.fillStyle=color;g.fillText(t,x,y)
 }
-const knightSprite=new Image();knightSprite.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAABICAYAAACwc3YrAAADaUlEQVR42mNgGAWjYBQMacBILYPy26f/J0X9xMpMqtjNNNRjgIUSzaLKRv+poff13XOMIzYGGCmNgbaeDoocUFVSMbJjACUPfPzx/z8DAwMDPwcj3hBxjsz8Ty0H6JmZMzCYmf9nYGBg2Lt8OuOIi4Hh44Gdpy//x8YejQF6ZuITl6+M5oFRD9CzLXT28EGGs4cPUsUhxrb2ozFAMbjZa0CSevXiC6N5gKoxQI0QHVAPwEBibj5OufmTJw5+D8BAoLs1nL1+59HBFwPkFH3kFpejmRgZ7F0+nXGprNH/AjYcnRQD3MXppVMnMcQo6VIy4mpCu5vqMvYsWoe1WW3b3EuT0DxcW4xTriQuiHG0MTdk84C5oRZdHIPNnpPnr9G+Hrjy/SvJenQ4uQeuFPq1bi5KCAlWNZFsxswwPwYtdVWKY3jA80BrVS1tYmCprNH/5xQYrMDJilPuwfffKHw/z2A4e9P2tdRPQoQyEjUBsmcYGBgYqtuayavI3gTFM8w2MyRooZKGGpytr41g69S34c70jVUMF6/egjTyFi5iYGBgYIhOS2NYOmsWXrveP7nKSNfWKKkgOi0NkYSxeEZQRvs/uocGlQdI8cygjAFyPDPaJ0YGsIzJwMDAoEOkOnIBLEMPyiSUGhWIwp+9bD3+GLi+Mfs/w7MZKBJyUywZpiPxMxf9oLpDYUXogCah74dWYhWfI8HA0FZhjSFe1XGUgQGHnmHRH0BPPshi2IpTjBio6T4GZ7eUWsHZU2/chYgJfRp8pZCm/1RGWAOOQR4h+a/q6miXklQwe9l6jFKHYClECjj4ipkiB1KqH71RR7IHur/9ZWBgYGBokhAiqPZYBmI4Eaael48fUYJ9/Ua9JLRUlvDKkwufaJeBCTWlKUpCtHQ4uidgDTf0dI/Lg0wD6XgxSUmKYwIjBoIeMjIY8PExXPj0ieECA+1DXkxSkuHV8+dEJy/0XhnTQCYZXDFBSiwQTELRj88xDqQn8IU+PAlhK4Ho5XBykw7OPEBNhyObpS7hQrCYnsLIzpDz/ydJdsDbQPgcjhxDu8P9SbJgQU89Y0JJI0nLdzauWEVwOAUlDxAKdXonJ/+IsKHbmEMPdXyhP+hHJQg5nqzG3IEdOxjooWfIJyGaeGAw1A1ke2AwOn5YJKFRMNAAAGmLML+7T97HAAAAAElFTkSuQmCC';
+// Pixel Art v3: native 24x32 hand-drawn sprite, no image download required.
+const knightRows=[
+'...........KKKK.........',
+'.........KKLLLLKK.......',
+'........KLLHHHHLLK......',
+'........KLHHHHHHLK......',
+'.......KLLHHHHHHLLK.....',
+'.......KLLHHHHHHLLK.....',
+'.......KLLDDDDDDLLK.....',
+'.......KLLDOOODDLLK.....',
+'........KLDDOODDLK......',
+'........KKLDDDD LKK.....',
+'.....KKKRRRRRRRRKKK.....',
+'....KLLLRRRRRRRRLLLK....',
+'...KLLLLRRRRRRRRLLLLK...',
+'..KLLLLLSSSSSSSSLLLLLK..',
+'..KLLHHHSSHHHHSSHHHLLK..',
+'..KLLHHHSSHHHHSSHHHLLK..',
+'...KLLHHSSHHHHSSHHLLK...',
+'....KLLHSSHHHHSSHLLK....',
+'.....KLLSSHHHHSSLLK.....',
+'.....KKLSSBBBBSSLKK.....',
+'......KLSSBBBBSSLK......',
+'......KLLSSSSSSLLK......',
+'.......KLHHHHHHLK.......',
+'.......KLHHHHHHLK.......',
+'......KLLHHKKHHLLK......',
+'......KLLHHKKHHLLK......',
+'......KLLHHKKHHLLK......',
+'......KLLHHKKHHLLK......',
+'......KLLHHKKHHLLK......',
+'.....KLLLHHKKHHLLLK.....',
+'.....KLLLLKKKKLLLLK.....',
+'.....KKKKKK..KKKKKK.....'
+];
+const knightPalette={K:'#17202b',L:'#425566',H:'#91a9b6',D:'#29323d',O:'#f1ad53',R:'#bd2635',S:'#5c7180',B:'#a57b4b'};
 function character(x,y,color,player=false){
  if(!player){
   ellipse(x,y+7,19,7,'#0005');
   rect(x-10,y-28,20,27,color);
   rect(x-9,y-3,7,12,'#59433d');rect(x+2,y-3,7,12,'#59433d');
   ellipse(x,y-40,14,16,'#f6c49e');
-  ellipse(x,y-52,15,8,'#795448');
-  return;
+  ellipse(x,y-52,15,8,'#795448');return;
  }
- // Native pixel sprite, nearest-neighbor rendering (no blur).
  const moving=!dead&&(keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright']);
  const bob=moving?Math.round(Math.sin(tick/5)*2):0;
- ellipse(x,y+7,23,7,'#0006');
- if(knightSprite.complete&&knightSprite.naturalWidth){
-   g.imageSmoothingEnabled=false;
-   g.drawImage(knightSprite,Math.round(x-36),Math.round(y-102+bob),72,108);
- }else{
-   rect(x-15,y-65,30,55,'#536a7b');rect(x-15,y-42,30,8,'#a71f31');
- }
+ const px=Math.round(x-36),py=Math.round(y-96+bob),sz=3;
+ ellipse(x,y+8,25,7,'#0006');
+ // Wind-blown red cape, each block aligned to the pixel grid.
+ for(let j=0;j<13;j++)rect(px+57+j*2,py+37+j*3,15,6,j%3?'#92192b':'#cf3444');
+ knightRows.forEach((line,j)=>{for(let i=0;i<24;i++){const c=knightPalette[line[i]];if(c)rect(px+i*sz,py+j*sz,sz,sz,c)}});
+ // Raised sword with sharp stepped silhouette.
+ const swordX=px-8+(hit>0?6:0);
+ rect(swordX,py+9,6,48,'#263341');rect(swordX+2,py+6,3,40,'#d7ebf5');
+ rect(swordX+1,py+3,4,7,'#f7f9fa');rect(swordX-6,py+48,17,5,'#d5b36b');
+ rect(swordX+1,py+53,5,15,'#614536');
+ // Lion shield at right
+ rect(px+54,py+41,21,38,'#1b2532');
+ rect(px+57,py+44,15,30,'#718b9c');
+ rect(px+60,py+49,9,5,'#d5d8c5');
+ rect(px+63,py+54,6,13,'#d5d8c5');
+ rect(px+60,py+62,3,7,'#d5d8c5');
  text('YOU',x,y-105+bob,'#ffe77e',12);
 }
 function building(x,y,w,h,roof){
