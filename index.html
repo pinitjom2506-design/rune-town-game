@@ -1,1 +1,215 @@
 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rune Town RPG</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#172332;color:white;font-family:Tahoma,Arial}
+header{padding:12px;background:#263b58;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+button{background:#e6c47c;border:2px solid #7b562a;border-radius:7px;padding:9px;cursor:pointer;font-weight:bold}
+#game{position:relative;margin:auto;max-width:960px}
+canvas{width:100%;display:block;touch-action:none;background:#83b970}
+#hud{position:absolute;top:10px;left:10px;background:#142338d9;padding:12px;border-radius:9px;font-size:13px}
+.bar{width:150px;height:12px;background:#555;margin:5px 0;border-radius:8px;overflow:hidden}
+#hp,#exp{height:100%;background:#e94f60;width:100%}
+#exp{background:#55bafa}
+#msg{position:absolute;bottom:12px;left:10px;right:10px;background:#142338df;padding:12px;border-radius:8px;pointer-events:none}
+#controls{text-align:center;padding:12px}
+#controls button{min-width:55px;margin:3px;touch-action:none}
+</style>
+</head>
+<body>
+<header>
+<strong>⚔️ RUNE TOWN — Fantasy RPG</strong>
+<span id="stats">Lv.1 | Zeny 100</span>
+<button onclick="save()">บันทึกเกม</button>
+</header>
+<div id="game">
+<canvas id="c" width="960" height="600"></canvas>
+<div id="hud">
+<strong>Novice</strong>
+<div>HP <span id="hpt">100/100</span></div>
+<div class="bar"><div id="hp"></div></div>
+<div>EXP</div>
+<div class="bar"><div id="exp"></div></div>
+<div id="quest">เควส: กำจัด Poring 0/5</div>
+</div>
+<div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
+</div>
+<div id="controls">
+<div><button data-key="ArrowUp">▲</button></div>
+<div>
+<button data-key="ArrowLeft">◀</button>
+<button data-key="ArrowDown">▼</button>
+<button data-key="ArrowRight">▶</button>
+<button onclick="attack()">⚔ โจมตี</button>
+<button onclick="interact()">💬 คุย</button>
+</div>
+</div>
+<script>
+const canvas=document.getElementById('c'),g=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0};
+try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
+let keys={},tick=0,hit=0;
+let npcs=[
+{x:265,y:230,name:'Kafra',color:'#f6d6a0'},
+{x:695,y:250,name:'ร้านค้า',color:'#d8aaff'},
+{x:475,y:175,name:'รับเควส',color:'#92e7ff'}
+];
+let mobs=Array.from({length:9},(_,i)=>({
+x:110+(i*113)%740,y:380+(i*71)%150,
+alive:true,respawn:0
+}));
+function say(t){$('msg').textContent=t}
+function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
+function updateHUD(){
+$('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny}`;
+$('hpt').textContent=`${p.hp}/${p.max}`;
+$('hp').style.width=(p.hp/p.max*100)+'%';
+$('exp').style.width=(p.exp/(p.lv*50)*100)+'%';
+$('quest').textContent=`เควส: กำจัด Poring ${Math.min(5,p.kills)}/5`;
+}
+function near(a,b,d=65){return Math.hypot(a.x-b.x,a.y-b.y)<d}
+function interact(){
+let n=npcs.find(n=>near(p,n,75));
+if(!n){say('เดินเข้าใกล้ NPC แล้วกดคุย');return}
+if(n.name==='Kafra'){
+p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')
+}else if(n.name==='ร้านค้า'){
+if(p.zeny>=20){p.zeny-=20;p.hp=Math.min(p.max,p.hp+40);say('ซื้อ Potion 20 Zeny ฟื้นฟู HP +40')}
+else say('Zeny ไม่เพียงพอ')
+}else{
+if(p.kills>=5){p.zeny+=200;p.kills=0;say('เควสสำเร็จ! รับ 200 Zeny')}
+else say('กำจัด Poring ให้ครบ 5 ตัวแล้วกลับมาหาฉัน')
+}
+updateHUD()
+}
+function attack(){
+hit=12;
+let m=mobs.find(m=>m.alive&&near(p,m,75));
+if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
+m.alive=false;m.respawn=240;
+p.exp+=20;p.zeny+=10;p.kills++;
+say('กำจัด Poring! +20 EXP, +10 Zeny');
+if(p.exp>=p.lv*50){
+p.exp-=p.lv*50;p.lv++;p.max+=20;p.hp=p.max;
+say('LEVEL UP! เลเวล '+p.lv)
+}
+updateHUD()
+}
+document.addEventListener('keydown',e=>{
+keys[e.key.toLowerCase()]=true;
+if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+if(e.key===' ')attack();
+if(e.key.toLowerCase()==='e')interact()
+});
+document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.querySelectorAll('[data-key]').forEach(b=>{
+let k=b.dataset.key.toLowerCase();
+b.onpointerdown=e=>{e.preventDefault();keys[k]=true;b.setPointerCapture(e.pointerId)};
+b.onpointerup=b.onpointercancel=()=>keys[k]=false
+});
+function ellipse(x,y,rx,ry,c){
+g.fillStyle=c;g.beginPath();g.ellipse(x,y,rx,ry,0,0,7);g.fill()
+}
+function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(x,y,w,h)}
+function text(t,x,y,color='#fff',size=15){
+g.font=`bold ${size}px Tahoma`;g.textAlign='center';
+g.lineWidth=3;g.strokeStyle='#34333c';g.strokeText(t,x,y);
+g.fillStyle=color;g.fillText(t,x,y)
+}
+function character(x,y,color,player=false){
+ellipse(x,y+7,19,7,'#0005');
+rect(x-10,y-28,20,27,color);
+rect(x-9,y-3,7,12,'#59433d');rect(x+2,y-3,7,12,'#59433d');
+ellipse(x,y-40,14,16,'#f6c49e');
+ellipse(x,y-52,15,8,player?'#a44d38':'#795448');
+if(player){
+rect(x-23,y-25,12,5,'#dedede');
+rect(x-27,y-41,5,29,'#c4d9ee');
+ellipse(x+18,y-18,11,14,'#b8c8d5');
+text('YOU',x,y-68,'#ffe77e',12)
+}
+}
+function building(x,y,w,h,roof){
+rect(x,y,w,h,'#c9a980');
+rect(x+12,y+23,24,34,'#5d463e');
+rect(x+w-44,y+20,26,30,'#66504b');
+g.fillStyle=roof;g.beginPath();
+g.moveTo(x-18,y);g.lineTo(x+w/2,y-72);
+g.lineTo(x+w+18,y);g.fill();
+}
+function draw(){
+tick++;
+let dx=(keys['arrowright']||keys['d']?1:0)-(keys['arrowleft']||keys['a']?1:0);
+let dy=(keys['arrowdown']||keys['s']?1:0)-(keys['arrowup']||keys['w']?1:0);
+if(dx||dy){
+let speed=2.7/Math.hypot(dx,dy);
+p.x=Math.max(25,Math.min(935,p.x+dx*speed));
+p.y=Math.max(175,Math.min(570,p.y+dy*speed));
+}
+rect(0,0,960,600,'#8fbd7a');
+rect(0,145,960,455,'#d6c5a3');
+for(let y=152;y<600;y+=32){
+for(let x=(Math.floor(y/32)%2)*23;x<960;x+=46){
+g.strokeStyle='#b8a88b';g.lineWidth=1;
+g.strokeRect(x,y,45,30)
+}}
+rect(0,0,960,150,'#9e9b91');
+for(let x=0;x<960;x+=70){
+rect(x,0,58,35,'#bdb7aa');
+rect(x,65,58,85,'#afa89a')
+}
+rect(375,45,210,140,'#5b5960');
+rect(394,65,172,120,'#c7b9a1');
+rect(417,90,126,95,'#534c4b');
+text('RUNE TOWN',480,43,'#ffe7a1',24);
+building(10,210,195,180,'#935d42');
+building(755,195,195,185,'#89553c');
+building(30,10,190,110,'#76503d');
+building(735,15,195,110,'#76503d');
+for(let i=0;i<20;i++){
+let x=(i*179+31)%950,y=(i*113+210)%590;
+if(x>240&&x<710&&y>230)continue;
+ellipse(x,y,28,18,'#4f9150');
+ellipse(x-8,y-8,23,17,'#69a85b')
+}
+ellipse(600,425,88,48,'#999d94');
+ellipse(600,418,73,38,'#65c5e4');
+ellipse(600,418,48,24,'#b1e9f1');
+rect(593,350,14,65,'#c8c7c0');
+ellipse(600,345,20,16,'#e2dfd3');
+text('น้ำพุเมือง',600,485,'#fff',13);
+npcs.forEach(n=>{
+character(n.x,n.y,n.color);
+text(n.name,n.x,n.y-70,'#fff1b5',15)
+});
+mobs.forEach(m=>{
+if(!m.alive){
+if(--m.respawn<=0)m.alive=true;
+return
+}
+let bounce=Math.sin(tick/12+m.x)*3;
+ellipse(m.x,m.y+6,18,6,'#0003');
+ellipse(m.x,m.y-9+bounce,19,15,'#f49db7');
+ellipse(m.x-7,m.y-13+bounce,3,4,'#393445');
+ellipse(m.x+7,m.y-13+bounce,3,4,'#393445');
+text('Poring',m.x,m.y-32+bounce,'#ffe2ed',12)
+});
+character(p.x,p.y,'#b96650',true);
+if(hit>0){
+hit--;g.strokeStyle='#ffe67b';g.lineWidth=5;
+g.beginPath();g.arc(p.x,p.y-22,34,-1.5,1.2);g.stroke()
+}
+updateHUD();
+requestAnimationFrame(draw)
+}
+draw();
+</script>
+</body>
+</html>
+
