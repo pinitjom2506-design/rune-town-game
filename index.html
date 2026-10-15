@@ -40,7 +40,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v19</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v20</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -87,6 +87,8 @@ let mobs=Array.from({length:5},(_,i)=>({
 x:110+(i*113)%740,y:380+(i*71)%150,
 alive:true,hp:100,maxHp:100,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0,vy:0
 }));
+// One additional plant-element rabbit, independent of the five Poring.
+mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:160,maxHp:160,respawn:0,cooldown:70,vx:0,vy:0});
 function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
 const MAX_LEVEL=550;
@@ -141,11 +143,11 @@ if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้')
 const damage=Math.round((p.weapon==='diamond'?65:p.weapon==='gold'?40:20)*levelDamageMultiplier());
 m.hp=Math.max(0,m.hp-damage);
 damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
-if(m.hp>0){say('โจมตี Poring! สร้างความเสียหาย '+damage);return}
+if(m.hp>0){say('โจมตี '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! สร้างความเสียหาย '+damage);return}
 m.alive=false;m.respawn=240;
-const expGain=Math.round((p.weapon==='diamond'?80:p.weapon==='gold'?40:20)*levelExpMultiplier());
-if(p.lv<MAX_LEVEL)p.exp+=expGain;p.zeny+=10;p.kills++;
-say('กำจัด Poring! '+damage+' DMG, +'+(p.lv>=MAX_LEVEL?0:expGain)+' EXP, +10 Zeny');
+const expGain=Math.round((p.weapon==='diamond'?80:p.weapon==='gold'?40:20)*levelExpMultiplier()*(m.type==='plantRabbit'?2:1));
+if(p.lv<MAX_LEVEL)p.exp+=expGain;p.zeny+=m.type==='plantRabbit'?20:10;if(m.type!=='plantRabbit')p.kills++;
+say('กำจัด '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! '+damage+' DMG, +'+(p.lv>=MAX_LEVEL?0:expGain)+' EXP, +'+(m.type==='plantRabbit'?20:10)+' Zeny');
 while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){
 p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;
 say('LEVEL UP! เลเวล '+p.lv)
@@ -327,16 +329,16 @@ mobs.forEach(m=>{
  if(dead)return;
  const distance=Math.hypot(p.x-m.x,p.y-m.y);
  if(distance<180&&distance>30){
-   const step=0.55;
+   const step=m.type==='plantRabbit'?0.75:0.55;
    m.x+=((p.x-m.x)/distance)*step;
    m.y+=((p.y-m.y)/distance)*step;
  }
  if(distance<44&&m.cooldown<=0&&invulnerable<=0){
-   const damage=5+Math.floor(Math.random()*7);
+   const damage=(m.type==='plantRabbit'?8:5)+Math.floor(Math.random()*7);
    p.hp=Math.max(0,p.hp-damage);
    m.cooldown=105;
    invulnerable=35;
-   say('Poring โจมตีคุณ! -'+damage+' HP');
+   say((m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+' โจมตีคุณ! -'+damage+' HP');
    if(p.hp<=0){
      dead=true;
      say('คุณหมดสติ! กดปุ่ม 💬 คุย หรือ E เพื่อฟื้นคืนชีพ');
@@ -382,6 +384,27 @@ if(--m.respawn<=0){m.alive=true;m.hp=m.maxHp;}
 return
 }
 let bounce=Math.sin(tick/12+m.x)*3;
+if(m.type==='plantRabbit'){
+ // Pixel-art leaf rabbit: tall ears, leafy crest, moss-green body, pink nose.
+ ellipse(m.x,m.y+7,22,7,'#0004');
+ rect(m.x-17,m.y-49+bounce,11,29,'#2c7c43');
+ rect(m.x-14,m.y-45+bounce,5,22,'#b2e27a');
+ rect(m.x+7,m.y-53+bounce,11,32,'#2c7c43');
+ rect(m.x+10,m.y-49+bounce,5,25,'#b2e27a');
+ rect(m.x-18,m.y-27+bounce,36,27,'#438c4b');
+ rect(m.x-13,m.y-23+bounce,26,21,'#a1d77b');
+ rect(m.x-21,m.y-8+bounce,10,10,'#2f7042');
+ rect(m.x+11,m.y-8+bounce,10,10,'#2f7042');
+ rect(m.x-10,m.y-18+bounce,5,6,'#182d27');
+ rect(m.x+6,m.y-18+bounce,5,6,'#182d27');
+ rect(m.x-3,m.y-9+bounce,6,4,'#e99ca0');
+ rect(m.x-5,m.y-32+bounce,10,7,'#2b8c3c');
+ rect(m.x-1,m.y-37+bounce,5,10,'#80c74b');
+ text('กระต่ายธาตุพืช',m.x,m.y-73+bounce,'#d6ffb0',12);
+ rect(m.x-25,m.y-67+bounce,50,8,'#2b2230');
+ rect(m.x-23,m.y-65+bounce,46*(m.hp/m.maxHp),4,m.hp>48?'#55d45a':'#f15c5c');
+ return;
+}
 ellipse(m.x,m.y+6,18,6,'#0003');
 ellipse(m.x,m.y-9+bounce,19,15,'#f49db7');
 ellipse(m.x-7,m.y-13+bounce,3,4,'#393445');
