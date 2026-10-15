@@ -30,7 +30,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v7</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v8</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -66,7 +66,7 @@ let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0,weapon:'norm
 try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
 if(!Array.isArray(p.owned))p.owned=['normal'];
 if(!['normal','gold','diamond'].includes(p.weapon))p.weapon='normal';
-let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0};
+let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[];
 let npcs=[
 {x:265,y:230,name:'Kafra',color:'#f6d6a0'},
 {x:695,y:250,name:'ร้านค้า',color:'#d8aaff'},
@@ -74,7 +74,7 @@ let npcs=[
 ];
 let mobs=Array.from({length:9},(_,i)=>({
 x:110+(i*113)%740,y:380+(i*71)%150,
-alive:true,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0,vy:0
+alive:true,hp:100,maxHp:100,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0,vy:0
 }));
 function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
@@ -123,9 +123,13 @@ slash={x:p.x,y:p.y-30,dx:facing.x,dy:facing.y,life:20};
 let range=p.weapon==='diamond'?145:p.weapon==='gold'?105:75;
 let m=mobs.find(m=>m.alive&&near(p,m,range));
 if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
+const damage=p.weapon==='diamond'?65:p.weapon==='gold'?40:20;
+m.hp=Math.max(0,m.hp-damage);
+damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
+if(m.hp>0){say('โจมตี Poring! สร้างความเสียหาย '+damage);return}
 m.alive=false;m.respawn=240;
 p.exp+=20;p.zeny+=10;p.kills++;
-say('กำจัด Poring! +20 EXP, +10 Zeny');
+say('กำจัด Poring! '+damage+' DMG, +20 EXP, +10 Zeny');
 if(p.exp>=p.lv*50){
 p.exp-=p.lv*50;p.lv++;p.max+=20;p.hp=p.max;
 say('LEVEL UP! เลเวล '+p.lv)
@@ -301,7 +305,7 @@ text(n.name,n.x,n.y-70,'#fff1b5',15)
 });
 mobs.forEach(m=>{
 if(!m.alive){
-if(--m.respawn<=0)m.alive=true;
+if(--m.respawn<=0){m.alive=true;m.hp=m.maxHp;}
 return
 }
 let bounce=Math.sin(tick/12+m.x)*3;
@@ -309,9 +313,13 @@ ellipse(m.x,m.y+6,18,6,'#0003');
 ellipse(m.x,m.y-9+bounce,19,15,'#f49db7');
 ellipse(m.x-7,m.y-13+bounce,3,4,'#393445');
 ellipse(m.x+7,m.y-13+bounce,3,4,'#393445');
-text('Poring',m.x,m.y-32+bounce,'#ffe2ed',12)
+text('Poring',m.x,m.y-48+bounce,'#ffe2ed',12);
+rect(m.x-25,m.y-43+bounce,50,8,'#2b2230');
+rect(m.x-23,m.y-41+bounce,46*(m.hp/m.maxHp),4,m.hp>30?'#55d45a':'#f15c5c')
 });
 if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
+damageTexts=damageTexts.filter(d=>d.life>0);
+damageTexts.forEach(d=>{d.y-=0.8;d.life--;text('-'+d.value,d.x,d.y,'#ffdf4b',20)});
 if(dead){rect(260,260,440,76,'#15151ddd');text('คุณหมดสติ!',480,291,'#ff7788',28);text('กด คุย หรือ E เพื่อฟื้นคืนชีพ',480,321,'#ffffff',17)}
 if(hit>0)hit--;
 if(slash&&slash.life>0){
