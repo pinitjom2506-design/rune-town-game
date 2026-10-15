@@ -40,7 +40,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v17</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v18</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -91,6 +91,8 @@ function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
 const MAX_LEVEL=550;
 function expRequired(level){return level>=MAX_LEVEL?0:50*Math.pow(2,level-1)}
+function levelExpMultiplier(){return Math.pow(1.25,p.lv-1)}
+function levelDamageMultiplier(){return Math.pow(1.5,p.lv-1)}
 function updateHUD(){
 $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ดาบ${p.weapon==='diamond'?'เพชร':p.weapon==='gold'?'ทอง':'ธรรมดา'}`;
 $('hpt').textContent=`${p.hp}/${p.max}`;
@@ -124,7 +126,7 @@ p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')
 }else if(n.name==='ร้านค้า'){
 openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')
 }else{
-if(p.kills>=5){const questExp=500*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1);p.zeny+=200;p.kills=0;if(p.lv<MAX_LEVEL)p.exp+=questExp;while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;say('LEVEL UP! เลเวล '+p.lv)}if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}say('เควสสำเร็จ! รับ 200 Zeny และ '+(p.lv>=MAX_LEVEL?0:questExp)+' EXP')}
+if(p.kills>=5){const questExp=Math.round(500*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1)*levelExpMultiplier());p.zeny+=200;p.kills=0;if(p.lv<MAX_LEVEL)p.exp+=questExp;while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;say('LEVEL UP! เลเวล '+p.lv)}if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}say('เควสสำเร็จ! รับ 200 Zeny และ '+(p.lv>=MAX_LEVEL?0:questExp)+' EXP')}
 else say('กำจัด Poring ให้ครบ 5 ตัวแล้วกลับมาหาฉัน')
 }
 updateHUD()
@@ -136,12 +138,12 @@ slash={x:p.x,y:p.y-30,dx:facing.x,dy:facing.y,life:20};
 let range=p.weapon==='diamond'?145:p.weapon==='gold'?105:75;
 let m=mobs.find(m=>m.alive&&near(p,m,range));
 if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
-const damage=p.weapon==='diamond'?65:p.weapon==='gold'?40:20;
+const damage=Math.round((p.weapon==='diamond'?65:p.weapon==='gold'?40:20)*levelDamageMultiplier());
 m.hp=Math.max(0,m.hp-damage);
 damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
 if(m.hp>0){say('โจมตี Poring! สร้างความเสียหาย '+damage);return}
 m.alive=false;m.respawn=240;
-const expGain=p.weapon==='diamond'?80:p.weapon==='gold'?40:20;
+const expGain=Math.round((p.weapon==='diamond'?80:p.weapon==='gold'?40:20)*levelExpMultiplier());
 if(p.lv<MAX_LEVEL)p.exp+=expGain;p.zeny+=10;p.kills++;
 say('กำจัด Poring! '+damage+' DMG, +'+(p.lv>=MAX_LEVEL?0:expGain)+' EXP, +10 Zeny');
 while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){
