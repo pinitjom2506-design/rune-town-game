@@ -31,6 +31,10 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 
 #shop{position:absolute;inset:0;background:#081522c9;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
 #shop.open{display:flex}
+#questMenu{position:absolute;inset:0;background:#081522d9;display:none;align-items:center;justify-content:center;z-index:12;padding:16px}
+#questMenu.open{display:flex}
+#questPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:20px;max-width:440px;width:100%}
+#questPanel button{display:block;width:100%;margin:9px 0;text-align:left}
 #shopPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:20px;max-width:430px;width:100%;box-shadow:0 12px 40px #0009}
 .shopItem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #6a7584}
 .shopItem button{white-space:nowrap}
@@ -40,7 +44,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v20</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v21</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -54,6 +58,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <div id="quest">เควส: กำจัด Poring 0/5</div>
 </div>
 <div id="shop"><div id="shopPanel"><h2>⚔ ร้านขายอาวุธ</h2><p id="shopBalance"></p><div class="shopItem"><span>🗡️ ดาบทอง<br><small>1,500 Zeny · ระยะโจมตี 105</small></span><button onclick="buySword('gold')">ซื้อ / สวมใส่</button></div><div class="shopItem"><span>💎 ดาบเพชร<br><small>5,000 Zeny · ระยะโจมตี 145</small></span><button onclick="buySword('diamond')">ซื้อ / สวมใส่</button></div><p id="shopNotice"></p><button onclick="closeShop()">ปิดร้านค้า ✕</button></div></div>
+<div id="questMenu"><div id="questPanel"><h2>📜 เลือกเควส</h2><p id="questStatus">เลือกเควสที่ต้องการทำ</p><button onclick="chooseQuest(1)">เควส 1: กำจัด Poring 5/5</button><button onclick="chooseQuest(2)">เควส 2: กำจัดกระต่ายธาตุพืช 3/3</button><button onclick="closeQuestMenu()">ปิด ✕</button></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
 <div id="controls">
 <button id="saveBtn" onclick="save()">💾 บันทึก</button>
@@ -77,6 +82,8 @@ p.lv=Math.min(550,Math.max(1,Math.floor(Number(p.lv)||1)));
 if(p.lv===550)p.exp=0;
 if(!Array.isArray(p.owned))p.owned=['normal'];
 if(!['normal','gold','diamond'].includes(p.weapon))p.weapon='normal';
+if(![0,1,2].includes(p.activeQuest))p.activeQuest=0;
+p.rabbitKills=Math.max(0,Math.floor(Number(p.rabbitKills)||0));
 let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[];
 let npcs=[
 {x:265,y:230,name:'Kafra',color:'#f6d6a0'},
@@ -100,7 +107,7 @@ $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ดาบ${p.weapon==='dia
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
-$('quest').textContent=`เควส: กำจัด Poring ${Math.min(5,p.kills)}/5`;
+$('quest').textContent=p.activeQuest===1?`เควส 1: Poring ${Math.min(5,p.kills)}/5`:p.activeQuest===2?`เควส 2: กระต่าย ${Math.min(3,p.rabbitKills)}/3`:'เควส: คุยกับ NPC เพื่อเลือกเควส';
 }
 function revive(){p.hp=p.max;p.x=480;p.y=340;dead=false;invulnerable=120;say('ฟื้นคืนชีพแล้ว! ได้รับการคุ้มครองชั่วคราว');updateHUD()}
 function near(a,b,d=65){return Math.hypot(a.x-b.x,a.y-b.y)<d}
@@ -119,19 +126,37 @@ function buySword(kind){
  saveSilent();
 }
 function saveSilent(){localStorage.setItem('rune-save',JSON.stringify(p))}
-function interact(){
-if(dead){revive();return}
-let n=npcs.find(n=>near(p,n,75));
-if(!n){say('เดินเข้าใกล้ NPC แล้วกดคุย');return}
-if(n.name==='Kafra'){
-p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')
-}else if(n.name==='ร้านค้า'){
-openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')
-}else{
-if(p.kills>=5){const questExp=Math.round(500*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1)*levelExpMultiplier());p.zeny+=200;p.kills=0;if(p.lv<MAX_LEVEL)p.exp+=questExp;while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;say('LEVEL UP! เลเวล '+p.lv)}if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}say('เควสสำเร็จ! รับ 200 Zeny และ '+(p.lv>=MAX_LEVEL?0:questExp)+' EXP')}
-else say('กำจัด Poring ให้ครบ 5 ตัวแล้วกลับมาหาฉัน')
+function closeQuestMenu(){$('questMenu').classList.remove('open')}
+function openQuestMenu(){
+ $('questStatus').textContent=p.activeQuest===1?'เควสที่ทำอยู่: Poring '+Math.min(5,p.kills)+'/5':p.activeQuest===2?'เควสที่ทำอยู่: กระต่าย '+Math.min(3,p.rabbitKills)+'/3':'เลือกเควสที่ต้องการทำ';
+ $('questMenu').classList.add('open');
 }
-updateHUD()
+function chooseQuest(id){
+ if(p.activeQuest&&p.activeQuest!==id){say('กรุณาทำเควสที่รับอยู่ให้สำเร็จก่อนเปลี่ยนเควส');closeQuestMenu();return}
+ p.activeQuest=id;
+ const progress=id===1?p.kills:p.rabbitKills,goal=id===1?5:3;
+ closeQuestMenu();
+ if(progress<goal){say('รับเควส '+id+' แล้ว! กำจัด '+(id===1?'Poring':'กระต่ายธาตุพืช')+' '+progress+'/'+goal);updateHUD();saveSilent();return}
+ const questExp=Math.round(500*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1)*levelExpMultiplier());
+ p.zeny+=200;
+ if(p.lv<MAX_LEVEL)p.exp+=questExp;
+ while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
+ if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
+ if(id===1)p.kills=0;else p.rabbitKills=0;
+ p.activeQuest=0;
+ say('เควส '+id+' สำเร็จ! รับ 200 Zeny และ '+(p.lv>=MAX_LEVEL?0:questExp)+' EXP');
+ updateHUD();saveSilent();
+}
+function interact(){
+ if(dead){revive();return}
+ if($('shop').classList.contains('open')){closeShop();return}
+ if($('questMenu').classList.contains('open')){closeQuestMenu();return}
+ const n=npcs.find(n=>near(p,n,75));
+ if(!n){say('เดินเข้าใกล้ NPC แล้วกดคุย');return}
+ if(n.name==='Kafra'){p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')}
+ else if(n.name==='ร้านค้า'){openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')}
+ else openQuestMenu();
+ updateHUD();
 }
 function attack(){
 if(dead){say('คุณหมดสติ! กดคุยเพื่อฟื้นคืนชีพ');return}
@@ -146,7 +171,7 @@ damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
 if(m.hp>0){say('โจมตี '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! สร้างความเสียหาย '+damage);return}
 m.alive=false;m.respawn=240;
 const expGain=Math.round((p.weapon==='diamond'?80:p.weapon==='gold'?40:20)*levelExpMultiplier()*(m.type==='plantRabbit'?2:1));
-if(p.lv<MAX_LEVEL)p.exp+=expGain;p.zeny+=m.type==='plantRabbit'?20:10;if(m.type!=='plantRabbit')p.kills++;
+if(p.lv<MAX_LEVEL)p.exp+=expGain;p.zeny+=m.type==='plantRabbit'?20:10;if(m.type==='plantRabbit'){if(p.activeQuest===2)p.rabbitKills++}else{if(p.activeQuest===1)p.kills++}
 say('กำจัด '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! '+damage+' DMG, +'+(p.lv>=MAX_LEVEL?0:expGain)+' EXP, +'+(m.type==='plantRabbit'?20:10)+' Zeny');
 while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){
 p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;
