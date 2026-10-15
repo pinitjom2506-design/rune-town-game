@@ -63,15 +63,20 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 .keyRow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #5c7783;font-size:13px}
 .keyRow button{min-width:110px}#keyHint{color:#ffe49c;min-height:25px}
 @media(max-width:600px){#menuPanel{padding:12px}#menuPanel h1{margin:3px 0}#menuPanel p{margin:4px 0}.menuButton{margin:6px 0;padding:7px}}
+#tutorialBox{position:absolute;top:105px;left:10px;z-index:6;background:#10283ded;border:2px solid #ffdf80;border-radius:8px;padding:9px;max-width:270px;font-size:12px;pointer-events:none;box-shadow:0 3px 12px #0007}
+#tutorialBox strong{color:#ffe08c;display:block;margin-bottom:5px}
+#tutorialBox.done{display:none}
+@media(max-width:600px){#tutorialBox{top:76px;left:5px;max-width:185px;padding:5px;font-size:10px}}
 </style>
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v29</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v30</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
 <canvas id="c" width="960" height="600"></canvas>
+<div id="tutorialBox"><strong>📖 บทสอนเล่น (Tutorial)</strong><span id="tutorialText"></span></div>
 <div id="hud">
 <strong>Novice</strong>
 <div>HP <span id="hpt">100/100</span></div>
@@ -108,7 +113,7 @@ const actionLabels={up:'เดินขึ้น',down:'เดินลง',left
 let bindings={...defaultBindings};
 try{const stored=JSON.parse(localStorage.getItem('rune-keys'));if(stored&&typeof stored==='object')for(const a of Object.keys(defaultBindings))if(typeof stored[a]==='string')bindings[a]=stored[a]}catch(e){}
 let menuActive=true,waitingKey=null;
-function startGame(){menuActive=false;$('mainMenu').style.display='none';keys={};say('ยินดีต้อนรับสู่ Rune Town!')}
+function startGame(){menuActive=false;$('mainMenu').style.display='none';keys={};updateTutorial();say(p.tutorialStage===3?'🎉 บทสอนเล่นเสร็จสมบูรณ์แล้ว!':'📖 เริ่มบทสอนเล่น! ทำตามคำแนะนำบนหน้าจอ')}
 function showKeySettings(){$('menuHome').style.display='none';$('keySettings').classList.add('open');renderKeySettings()}
 function hideKeySettings(){waitingKey=null;$('keySettings').classList.remove('open');$('menuHome').style.display='block'}
 function keyName(k){return k===' '?'Space':k.startsWith('arrow')?k.replace('arrow','Arrow '):k.toUpperCase()}
@@ -133,6 +138,7 @@ if(p.lv===550)p.exp=0;
 if(!Array.isArray(p.owned))p.owned=['normal'];
 if(!['normal','gold','diamond','lightning','emerald','ruby','void','lord'].includes(p.weapon))p.weapon='normal';
 if(![0,1,2].includes(p.activeQuest))p.activeQuest=0;
+if(![0,1,2,3].includes(p.tutorialStage))p.tutorialStage=0;
 p.rabbitKills=Math.max(0,Math.floor(Number(p.rabbitKills)||0));
 let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[],skillEffect=null,skillReadyAt=0;
 let npcs=[
@@ -149,6 +155,29 @@ mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,
 mobs.push({x:725,y:525,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:95,vx:0,vy:0});
 if(bootSave&&Array.isArray(bootSave.worldMobs)&&bootSave.worldMobs.length===mobs.length){bootSave.worldMobs.forEach((saved,i)=>{if(saved&&typeof saved.x==='number'&&typeof saved.y==='number')Object.assign(mobs[i],saved)})}
 function say(t){$('msg').textContent=t}
+function updateTutorial(){
+ const stage=p.tutorialStage||0;
+ const box=$('tutorialBox');
+ box.classList.toggle('done',stage===3);
+ $('tutorialText').textContent=stage===0?'ขั้นที่ 1/3: เดินไปหา NPC รับเควส แล้วกดคุย (E) เลือกเควส 1 กำจัด Poring 5 ตัว':stage===1?'ขั้นที่ 2/3: กำจัด Poring ตามเควส '+Math.min(5,p.kills)+'/5 ตัว · กดโจมตี (Space)':'ขั้นที่ 3/3: ไปหา Kafra แล้วกดคุย (E) เพื่อฟื้นฟู HP ให้เต็ม';
+}
+function tutorialTarget(){
+ if(p.tutorialStage===0)return npcs.find(n=>n.name==='รับเควส');
+ if(p.tutorialStage===1)return mobs.filter(m=>m.alive&&m.type!=='plantRabbit').sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y))[0];
+ if(p.tutorialStage===2)return npcs.find(n=>n.name==='Kafra');
+ return null;
+}
+function drawTutorialGuide(){
+ if(menuActive||p.tutorialStage===3)return;
+ const target=tutorialTarget();if(!target)return;
+ const tx=target.x,ty=target.y-65;
+ g.save();
+ g.strokeStyle='#ffe86a';g.lineWidth=4;g.setLineDash([10,7]);
+ g.beginPath();g.moveTo(p.x,p.y-35);g.lineTo(tx,ty);g.stroke();g.setLineDash([]);
+ const bob=Math.sin(tick*.1)*7;
+ g.fillStyle='#ffe86a';g.beginPath();g.moveTo(tx,ty-18+bob);g.lineTo(tx-12,ty-36+bob);g.lineTo(tx+12,ty-36+bob);g.closePath();g.fill();
+ g.restore();
+}
 function captureGame(){return {...JSON.parse(JSON.stringify(p)),worldMobs:JSON.parse(JSON.stringify(mobs))}}
 function save(){saveSilent();say('บันทึกความคืบหน้าปัจจุบันแล้ว')}
 function openSaveMenu(){
@@ -247,13 +276,17 @@ function completeQuest(){
  p.zeny+=questZeny;p.exp+=questExp;
  while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
  if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
+ if(id===1&&p.tutorialStage===1)p.tutorialStage=2;
  p.kills=0;p.rabbitKills=0;p.activeQuest=0;
+ updateTutorial();
  say('🎉 เควส '+id+' สำเร็จ! ได้รับรางวัลอัตโนมัติ +'+questZeny+' Zeny และ +'+questExp+' EXP');
  updateHUD();saveSilent();return true;
 }
 function chooseQuest(id){
  if(p.activeQuest&&p.activeQuest!==id){say('กรุณาทำเควสที่รับอยู่ให้สำเร็จก่อนเปลี่ยนเควส');closeQuestMenu();return}
  p.activeQuest=id;
+ if(id===1&&p.tutorialStage===0)p.tutorialStage=1;
+ updateTutorial();
  closeQuestMenu();
  say('รับเควส '+id+' แล้ว! กำจัด '+(id===1?'Poring 5 ตัว':'กระต่ายธาตุพืช 3 ตัว')+' เพื่อรับรางวัลอัตโนมัติ');
  updateHUD();saveSilent();
@@ -265,7 +298,7 @@ function interact(){
  if($('questMenu').classList.contains('open')){closeQuestMenu();return}
  const n=npcs.find(n=>near(p,n,75));
  if(!n){say('เดินเข้าใกล้ NPC แล้วกดคุย');return}
- if(n.name==='Kafra'){p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')}
+ if(n.name==='Kafra'){p.hp=p.max;if(p.tutorialStage===2){p.tutorialStage=3;updateTutorial();saveSilent();say('🎉 Tutorial สำเร็จ! Kafra ฮีล HP เต็มแล้ว ขอให้สนุกกับ Rune Town!')}else say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')}
  else if(n.name==='ร้านค้า'){openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')}
  else openQuestMenu();
  updateHUD();
@@ -279,7 +312,7 @@ function defeatMonster(m,damage){
  say('กำจัด '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! +'+expGain+' EXP');
  while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
  if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
- completeQuest();updateHUD();
+ completeQuest();updateHUD();updateTutorial();
 }
 function damageMonster(m,damage){
  m.hp=Math.max(0,m.hp-damage);
@@ -610,6 +643,7 @@ if(skillEffect&&skillEffect.life-->0){
 if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
 damageTexts=damageTexts.filter(d=>d.life>0);
 damageTexts.forEach(d=>{d.y-=0.8;d.life--;text('-'+d.value,d.x,d.y,'#ffdf4b',20)});
+drawTutorialGuide();
 if(dead){rect(260,260,440,76,'#15151ddd');text('คุณหมดสติ!',480,291,'#ff7788',28);text('กด คุย หรือ E เพื่อฟื้นคืนชีพ',480,321,'#ffffff',17)}
 if(hit>0)hit--;
 if(slash&&slash.life>0){
