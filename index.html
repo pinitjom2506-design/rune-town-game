@@ -126,17 +126,53 @@ g.lineWidth=3;g.strokeStyle='#34333c';g.strokeText(t,x,y);
 g.fillStyle=color;g.fillText(t,x,y)
 }
 function character(x,y,color,player=false){
-ellipse(x,y+7,19,7,'#0005');
-rect(x-10,y-28,20,27,color);
-rect(x-9,y-3,7,12,'#59433d');rect(x+2,y-3,7,12,'#59433d');
-ellipse(x,y-40,14,16,'#f6c49e');
-ellipse(x,y-52,15,8,player?'#a44d38':'#795448');
-if(player){
-rect(x-23,y-25,12,5,'#dedede');
-rect(x-27,y-41,5,29,'#c4d9ee');
-ellipse(x+18,y-18,11,14,'#b8c8d5');
-text('YOU',x,y-68,'#ffe77e',12)
-}
+ if(!player){
+  ellipse(x,y+7,19,7,'#0005');
+  rect(x-10,y-28,20,27,color);
+  rect(x-9,y-3,7,12,'#59433d');rect(x+2,y-3,7,12,'#59433d');
+  ellipse(x,y-40,14,16,'#f6c49e');
+  ellipse(x,y-52,15,8,'#795448');
+  return;
+ }
+ // Armored knight: dark steel helmet, red cape, sword and heraldic shield.
+ g.save();g.translate(x,y);
+ const bob=!dead&&(keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'])?Math.sin(tick/5)*2:0;
+ g.translate(0,bob);
+ ellipse(0,9,25,8,'#0006');
+ g.fillStyle='#a71f31';g.beginPath();g.moveTo(-10,-45);g.lineTo(-34,-26);g.lineTo(-33,5);g.lineTo(-16,-2);g.lineTo(-8,8);g.lineTo(15,-29);g.closePath();g.fill();
+ g.strokeStyle='#6e1729';g.lineWidth=2;g.stroke();
+ // armored boots
+ rect(-16,-10,13,18,'#283341');rect(5,-10,13,18,'#283341');
+ rect(-18,4,16,7,'#586c7b');rect(4,4,17,7,'#586c7b');
+ rect(-16,-9,13,4,'#8c9ca7');rect(5,-9,13,4,'#8c9ca7');
+ // torso and pauldrons
+ rect(-15,-40,30,35,'#293645');
+ rect(-13,-38,26,25,'#637785');rect(-9,-34,18,14,'#8a9ba6');
+ g.strokeStyle='#1b2634';g.lineWidth=3;g.strokeRect(-13,-38,26,25);
+ ellipse(-17,-37,11,12,'#566d7d');ellipse(17,-37,11,12,'#566d7d');
+ ellipse(-19,-39,6,5,'#a4b7bf');ellipse(19,-39,6,5,'#a4b7bf');
+ rect(-13,-13,26,6,'#563b30');rect(-3,-14,7,8,'#d7b875');
+ // helmet
+ ellipse(0,-56,16,21,'#26333e');
+ ellipse(-2,-61,13,15,'#758d9a');
+ g.fillStyle='#1b2530';g.beginPath();g.moveTo(-13,-59);g.lineTo(13,-59);g.lineTo(9,-44);g.lineTo(0,-40);g.lineTo(-9,-44);g.closePath();g.fill();
+ rect(-9,-56,18,5,'#080e18');rect(-7,-54,14,2,'#e7ae5d');
+ rect(-3,-50,6,10,'#7e919c');
+ // red scarf
+ g.fillStyle='#b01e2c';g.beginPath();g.moveTo(-16,-43);g.lineTo(13,-43);g.lineTo(18,-35);g.lineTo(-10,-34);g.closePath();g.fill();
+ rect(-3,-34,10,17,'#9e1d2a');
+ // sword at left
+ g.save();g.translate(-24,-30);g.rotate(hit>0?-.65:.25);
+ rect(-3,-40,7,39,'#c4d5df');rect(-1,-37,3,32,'#f4faff');
+ g.fillStyle='#e6f0f5';g.beginPath();g.moveTo(-3,-40);g.lineTo(.5,-53);g.lineTo(4,-40);g.fill();
+ rect(-12,-4,23,5,'#d6b47a');rect(-2,1,5,13,'#49352d');g.restore();
+ // shield at right, with lion-like crest
+ g.fillStyle='#1b2835';g.beginPath();g.moveTo(12,-44);g.lineTo(36,-37);g.lineTo(33,-11);g.lineTo(23,0);g.lineTo(12,-14);g.closePath();g.fill();
+ g.strokeStyle='#9cabb8';g.lineWidth=4;g.stroke();
+ g.fillStyle='#647989';g.beginPath();g.moveTo(17,-39);g.lineTo(31,-34);g.lineTo(29,-15);g.lineTo(23,-7);g.lineTo(17,-17);g.fill();
+ text('♞',24,-18,'#d5dbe1',15);
+ g.restore();
+ text('YOU',x,y-87,'#ffe77e',12);
 }
 function building(x,y,w,h,roof){
 rect(x,y,w,h,'#c9a980');
