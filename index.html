@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v36</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v37</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -424,9 +424,9 @@ function drawGoldenSkill(){
 }
 function useSkill(){
  if(dead){say('ไม่สามารถใช้สกิลขณะหมดสติ');return}
- if(p.lv<2){say('🔒 สกิลปลดล็อกเมื่อเลเวล 2');return}
- if(!['normal','gold','diamond'].includes(p.weapon)){say('⚔️ ดาบนี้ยังไม่มีสกิลเฉพาะ');return}
- if($('inventory').classList.contains('open')||$('shop').classList.contains('open')||$('questMenu').classList.contains('open'))return;
+ if(p.lv<2){say('🔒 กด C สำเร็จ แต่ต้องเลเวล 2 จึงจะใช้สกิลได้');return}
+ if(!['normal','gold','diamond'].includes(p.weapon)){say('⚔️ กด C สำเร็จ แต่ดาบนี้ยังไม่มีสกิลเฉพาะ');return}
+ if($('inventory').classList.contains('open')||$('shop').classList.contains('open')||$('questMenu').classList.contains('open')){say('ปิดหน้าต่างเมนูก่อนใช้สกิล');return;}
  const now=Date.now();
  if(now<skillReadyAt){say('สกิลกำลังคูลดาวน์ อีก '+Math.ceil((skillReadyAt-now)/1000)+' วินาที');return}
  if(p.weapon==='diamond'){
@@ -462,6 +462,7 @@ function useSkill(){
  updateHUD();
 }
 document.addEventListener('keydown',e=>{
+ if((e.code==='KeyC'||e.key.toLowerCase()==='c')&&!menuActive){e.preventDefault();if(e.repeat)return;useSkill();return;}
  const key=e.key.toLowerCase();
  if(menuActive){
   if(waitingKey){
@@ -480,7 +481,7 @@ document.addEventListener('keydown',e=>{
  if(e.repeat)return;
  if(isActionKey('attack',key))attack();
  if(isActionKey('talk',key)||key==='e')interact();
- if(key==='c')useSkill();
+ if(key==='c'||e.code==='KeyC')useSkill();
  if(isActionKey('inventory',key))toggleInventory();
 });
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
