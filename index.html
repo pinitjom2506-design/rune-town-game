@@ -19,11 +19,18 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 #msg{position:absolute;bottom:12px;left:10px;right:10px;background:#142338df;padding:12px;border-radius:8px;pointer-events:none}
 #controls{text-align:center;padding:12px}
 #controls button{min-width:55px;margin:3px;touch-action:none}
+#shop{position:absolute;inset:0;background:#081522c9;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
+#shop.open{display:flex}
+#shopPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:20px;max-width:430px;width:100%;box-shadow:0 12px 40px #0009}
+.shopItem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #6a7584}
+.shopItem button{white-space:nowrap}
+#shopNotice{min-height:22px;color:#ffdd8c}
+
 </style>
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v6</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v7</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -37,6 +44,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <div class="bar"><div id="exp"></div></div>
 <div id="quest">เควส: กำจัด Poring 0/5</div>
 </div>
+<div id="shop"><div id="shopPanel"><h2>⚔ ร้านขายอาวุธ</h2><p id="shopBalance"></p><div class="shopItem"><span>🗡️ ดาบทอง<br><small>1,500 Zeny · ระยะโจมตี 105</small></span><button onclick="buySword('gold')">ซื้อ / สวมใส่</button></div><div class="shopItem"><span>💎 ดาบเพชร<br><small>5,000 Zeny · ระยะโจมตี 145</small></span><button onclick="buySword('diamond')">ซื้อ / สวมใส่</button></div><p id="shopNotice"></p><button onclick="closeShop()">ปิดร้านค้า ✕</button></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
 </div>
 <div id="controls">
@@ -54,8 +62,10 @@ const canvas=document.getElementById('c'),g=canvas.getContext('2d');
 g.imageSmoothingEnabled=false;
 
 const $=id=>document.getElementById(id);
-let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0};
+let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0,weapon:'normal',owned:['normal']};
 try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
+if(!Array.isArray(p.owned))p.owned=['normal'];
+if(!['normal','gold','diamond'].includes(p.weapon))p.weapon='normal';
 let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0};
 let npcs=[
 {x:265,y:230,name:'Kafra',color:'#f6d6a0'},
@@ -69,7 +79,7 @@ alive:true,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0,vy:0
 function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
 function updateHUD(){
-$('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny}`;
+$('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ดาบ${p.weapon==='diamond'?'เพชร':p.weapon==='gold'?'ทอง':'ธรรมดา'}`;
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=(p.exp/(p.lv*50)*100)+'%';
@@ -77,6 +87,21 @@ $('quest').textContent=`เควส: กำจัด Poring ${Math.min(5,p.kill
 }
 function revive(){p.hp=p.max;p.x=480;p.y=340;dead=false;invulnerable=120;say('ฟื้นคืนชีพแล้ว! ได้รับการคุ้มครองชั่วคราว');updateHUD()}
 function near(a,b,d=65){return Math.hypot(a.x-b.x,a.y-b.y)<d}
+const swords={gold:{name:'ดาบทอง',price:1500},diamond:{name:'ดาบเพชร',price:5000}};
+function openShop(){ $('shop').classList.add('open');$('shopNotice').textContent='เลือกอาวุธที่ต้องการ';updateShop() }
+function closeShop(){ $('shop').classList.remove('open') }
+function updateShop(){ $('shopBalance').textContent='คุณมี '+p.zeny.toLocaleString('th-TH')+' Zeny'; }
+function buySword(kind){
+ const item=swords[kind];if(!item)return;
+ if(!p.owned.includes(kind)){
+  if(p.zeny<item.price){$('shopNotice').textContent='Zeny ไม่เพียงพอ ต้องใช้ '+item.price.toLocaleString('th-TH')+' Zeny';return}
+  p.zeny-=item.price;p.owned.push(kind);
+ }
+ p.weapon=kind;updateHUD();updateShop();
+ $('shopNotice').textContent='สวมใส่'+item.name+'แล้ว!';
+ saveSilent();
+}
+function saveSilent(){localStorage.setItem('rune-save',JSON.stringify(p))}
 function interact(){
 if(dead){revive();return}
 let n=npcs.find(n=>near(p,n,75));
@@ -84,8 +109,7 @@ if(!n){say('เดินเข้าใกล้ NPC แล้วกดคุย
 if(n.name==='Kafra'){
 p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')
 }else if(n.name==='ร้านค้า'){
-if(p.zeny>=20){p.zeny-=20;p.hp=Math.min(p.max,p.hp+40);say('ซื้อ Potion 20 Zeny ฟื้นฟู HP +40')}
-else say('Zeny ไม่เพียงพอ')
+openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')
 }else{
 if(p.kills>=5){p.zeny+=200;p.kills=0;say('เควสสำเร็จ! รับ 200 Zeny')}
 else say('กำจัด Poring ให้ครบ 5 ตัวแล้วกลับมาหาฉัน')
@@ -96,7 +120,8 @@ function attack(){
 if(dead){say('คุณหมดสติ! กดคุยเพื่อฟื้นคืนชีพ');return}
 hit=20;
 slash={x:p.x,y:p.y-30,dx:facing.x,dy:facing.y,life:20};
-let m=mobs.find(m=>m.alive&&near(p,m,75));
+let range=p.weapon==='diamond'?145:p.weapon==='gold'?105:75;
+let m=mobs.find(m=>m.alive&&near(p,m,range));
 if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
 m.alive=false;m.respawn=240;
 p.exp+=20;p.zeny+=10;p.kills++;
@@ -183,8 +208,9 @@ function character(x,y,color,player=false){
  knightRows.forEach((line,j)=>{for(let i=0;i<24;i++){const c=knightPalette[line[i]];if(c)rect(px+i*sz,py+j*sz,sz,sz,c)}});
  // Raised sword with sharp stepped silhouette.
  const swordX=px-8+(hit>0?6:0);
- rect(swordX,py+9,6,48,'#263341');rect(swordX+2,py+6,3,40,'#d7ebf5');
- rect(swordX+1,py+3,4,7,'#f7f9fa');rect(swordX-6,py+48,17,5,'#d5b36b');
+ const blade=p.weapon==='diamond'?'#54f1ff':p.weapon==='gold'?'#ffd44b':'#d7ebf5';
+ rect(swordX,py+9,6,48,'#263341');rect(swordX+2,py+6,3,40,blade);
+ rect(swordX+1,py+3,4,7,blade);rect(swordX-6,py+48,17,5,'#d5b36b');
  rect(swordX+1,py+53,5,15,'#614536');
  // Lion shield at right
  rect(px+54,py+41,21,38,'#1b2532');
