@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v47 — Top-Down 3D</title>
+<title>Rune Town v48 — Top-Down 3D</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,10 +79,10 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — TOP-DOWN 3D v47</strong>
+<strong>⚔️ RUNE TOWN — TOP-DOWN 3D v48</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
-<div id="game">
+<div id="game"><div id="renderMode" style="position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:6;background:#16283bdc;color:#fff4cc;padding:4px 9px;border:1px solid #ffe09c;border-radius:6px;font:12px Tahoma,Arial;pointer-events:none">กำลังโหลดฉาก 3D...</div>
 <canvas id="c" width="960" height="600"></canvas>
 <div id="tutorialBox"><strong>📖 บทสอนเล่น (Tutorial)</strong><span id="tutorialText"></span></div>
 <div id="hud">
@@ -112,6 +112,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <div id="actions"><span id="skillBtn" aria-label="ใช้สกิลโดยกดปุ่ม C">🌊 C สกิล</span><button onclick="attack()">⚔ โจมตี</button><button onclick="interact()">💬 คุย</button><button onclick="toggleInventory()">🎒 I</button></div>
 </div>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.149.0/three.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js'"></script>
 <script>
 const canvas=document.getElementById('c'),g=canvas.getContext('2d');
 g.imageSmoothingEnabled=false;
@@ -858,11 +859,11 @@ function initTown3D(){
   cube(x,5.65,z,1.1,.15,.15,gold);
   cube(x,4.65,z,.16,1.7,.16,gold);
  }
- scene3D=scene;renderer3D=renderer;camera3D=camera;
- }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null}
+ scene3D=scene;renderer3D=renderer;camera3D=camera;document.getElementById('renderMode').textContent='✓ 3D WebGL';
+ }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null;document.getElementById('renderMode').textContent='⚠ 2D สำรอง (WebGL ไม่พร้อม)'}
 }
 function drawTown3D(){
- if(!scene3D||!renderer3D){drawTownBackdrop();return}
+ if(!scene3D||!renderer3D){if(tick===1)document.getElementById('renderMode').textContent='⚠ 2D สำรอง (โหลด 3D ไม่สำเร็จ)';drawTownBackdrop();return}
  try{
  if(water3D){water3D.rotation.y=tick*.003;water3D.material.emissive.setHex(0x0a3440);water3D.material.emissiveIntensity=.15+Math.sin(tick*.04)*.08}
  renderer3D.render(scene3D,camera3D);
@@ -1176,9 +1177,10 @@ drawDiamondSkill();
 updateHUD();
 requestAnimationFrame(draw)
 }
+initTown3D();
 draw();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r149/three.min.js" onload="initTown3D()" onerror="console.warn('Three.js unavailable: using 2D fallback')"></script>
+
 </body>
 </html>
 
