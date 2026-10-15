@@ -3,8 +3,11 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town RPG</title>
+<title>Rune Town v41 — New Player Walk</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -76,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v39</strong>
+<strong>🎒 RUNE TOWN — PLAYER WALK v41</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -549,6 +552,7 @@ function character(x,y,color,player=false){
  }
 
  // Player-only five-pose walking cycle: contact / down / passing / up / contact.
+ // Saved equipment changes damage and skills, never replaces the civilian avatar.
  const moving=!dead&&(Math.abs(playerVelocity.x)+Math.abs(playerVelocity.y)>0.01);
  const dir=facing.x<-.2?-1:1;
  const phase=moving?(walkCycle%1):0;
@@ -830,7 +834,7 @@ if(skillEffect&&skillEffect.life-->0){
  g.restore();
  if(e.life<=0)skillEffect=null;
 }
-if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
+if(invulnerable===0||tick%10<5)character(p.x,p.y,'#34648d',true);
 damageTexts=damageTexts.filter(d=>d.life>0);
 damageTexts.forEach(d=>{d.y-=0.8;d.life--;text('-'+d.value,d.x,d.y,'#ffdf4b',20)});
 drawTutorialGuide();
