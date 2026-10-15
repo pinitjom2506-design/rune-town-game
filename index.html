@@ -146,6 +146,7 @@ if(!['normal','gold','diamond','lightning','emerald','ruby','void','lord'].inclu
 if(![0,1,2].includes(p.activeQuest))p.activeQuest=0;
 if(![0,1,2,3].includes(p.tutorialStage))p.tutorialStage=0;
 p.rabbitKills=Math.max(0,Math.floor(Number(p.rabbitKills)||0));
+let playerVelocity={x:0,y:0},walkCycle=0;
 let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[],skillEffect=null,skillReadyAt=0;
 let npcs=[
 {x:265,y:230,name:'Kafra',color:'#f6d6a0'},
@@ -546,26 +547,62 @@ function character(x,y,color,player=false){
   ellipse(x,y-40,14,16,'#f6c49e');
   ellipse(x,y-52,15,8,'#795448');return;
  }
- const moving=!dead&&(keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright']);
- const bob=moving?Math.round(Math.sin(tick/5)*2):0;
- const px=Math.round(x-36),py=Math.round(y-96+bob),sz=3;
- ellipse(x,y+8,25,7,'#0006');
- // Wind-blown red cape, each block aligned to the pixel grid.
- for(let j=0;j<13;j++)rect(px+57+j*2,py+37+j*3,15,6,j%3?'#92192b':'#cf3444');
- knightRows.forEach((line,j)=>{for(let i=0;i<24;i++){const c=knightPalette[line[i]];if(c)rect(px+i*sz,py+j*sz,sz,sz,c)}});
- // Raised sword with sharp stepped silhouette.
- const swordX=px-8+(hit>0?6:0);
- const blade={normal:'#d7ebf5',gold:'#ffd44b',diamond:'#54f1ff',lightning:'#f5e94a',emerald:'#42f0a3',ruby:'#fa4266',void:'#a265f6',lord:'#ffdf80'}[p.weapon]||'#d7ebf5';
- rect(swordX,py+9,6,48,'#263341');rect(swordX+2,py+6,3,40,blade);
- rect(swordX+1,py+3,4,7,blade);rect(swordX-6,py+48,17,5,'#d5b36b');
- rect(swordX+1,py+53,5,15,'#614536');
- // Lion shield at right
- rect(px+54,py+41,21,38,'#1b2532');
- rect(px+57,py+44,15,30,'#718b9c');
- rect(px+60,py+49,9,5,'#d5d8c5');
- rect(px+63,py+54,6,13,'#d5d8c5');
- rect(px+60,py+62,3,7,'#d5d8c5');
- text('YOU',x,y-105+bob,'#ffe77e',12);
+
+ // Player-only five-pose walking cycle: contact / down / passing / up / contact.
+ const moving=!dead&&(Math.abs(playerVelocity.x)+Math.abs(playerVelocity.y)>0.01);
+ const dir=facing.x<-.2?-1:1;
+ const phase=moving?(walkCycle%1):0;
+ const gait=Math.sin(phase*Math.PI*2),other=Math.sin(phase*Math.PI*2+Math.PI);
+ const bounce=moving?Math.round(Math.abs(Math.sin(phase*Math.PI*2))*2):0;
+ const lean=moving?Math.round(Math.sin(phase*Math.PI*2)*1.3):0;
+ g.save();g.translate(Math.round(x),Math.round(y+bounce));g.scale(dir,1);
+ const P=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),w,h)};
+ const line=(x1,y1,x2,y2,width,c)=>{g.strokeStyle=c;g.lineWidth=width;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()};
+ ellipse(0,6,22,6,'#0005');
+ // Alternate foot contact, lowering, passing and lifting, with grounded feet.
+ for(const [side,step] of [[-1,gait],[1,other]]){
+  const hipX=side*6,hipY=-37;
+  const footX=side*5+step*13,footY=-4-Math.max(0,-step)*10;
+  const kneeX=hipX+step*6+(side===-1?-3:3),kneeY=-20+Math.max(0,-step)*3;
+  line(hipX,hipY,kneeX,kneeY,11,'#273d52');
+  line(hipX,hipY,kneeX,kneeY,8,'#5d829e');
+  line(kneeX,kneeY,footX,footY,10,'#26394b');
+  line(kneeX,kneeY,footX,footY,7,'#527893');
+  line(footX-2,footY,footX+9,footY+1,8,'#1b2630');
+  P(footX+1,footY-1,7,2,'#f3f3e7');
+ }
+ // Backpack and shoulder straps, blue zip-up jacket and white shirt.
+ P(-22,-76,16,35,'#1d2530');P(-20,-73,13,30,'#3e4247');
+ P(-21,-60,5,16,'#66747c');
+ P(-12+lean,-75,27,40,'#233e59');
+ P(-9+lean,-73,24,34,'#34648d');
+ P(-3+lean,-72,12,32,'#f2f3eb');
+ P(-13+lean,-72,6,32,'#1e3956');
+ P(10+lean,-73,6,34,'#19384e');
+ P(-9+lean,-43,22,6,'#29415a');
+ // Arm swing counterbalances the walking legs.
+ const arm=gait*12;
+ line(-12+lean,-68,-18-arm*.45,-48+arm*.2,11,'#203c55');
+ line(-12+lean,-68,-18-arm*.45,-48+arm*.2,8,'#37658a');
+ line(-18-arm*.45,-48+arm*.2,-13-arm,-34+arm*.35,8,'#285174');
+ line(-13-arm,-34+arm*.35,-12-arm,-28+arm*.35,6,'#f0bd9d');
+ line(13+lean,-68,17+arm*.5,-47-arm*.15,11,'#1b354e');
+ line(13+lean,-68,17+arm*.5,-47-arm*.15,8,'#386a91');
+ line(17+arm*.5,-47-arm*.15,14+arm,-32-arm*.35,8,'#2a5277');
+ line(14+arm,-32-arm*.35,13+arm,-27-arm*.35,6,'#efb797');
+ // Neck, face and distinct tousled brown hair.
+ P(-2,-83,9,12,'#e5aa87');
+ P(-9,-106,26,29,'#302b2c');
+ P(-7,-104,25,26,'#efc3a0');
+ P(13,-93,5,8,'#eab28f');
+ P(7,-96,3,3,'#26303b');
+ P(17,-90,4,2,'#a06d59');
+ for(const [hx,hy,hw,hh] of [[-11,-110,27,10],[-15,-106,11,12],[-7,-115,10,12],[2,-117,12,11],[12,-111,10,13],[16,-105,7,8]])P(hx,hy,hw,hh,'#4b352d');
+ P(-7,-111,13,4,'#73513b');P(2,-114,10,3,'#6a4b37');
+ if(dead){g.globalAlpha=.45}
+ g.restore();
+ text('YOU',x,y-123+bounce,'#ffe77e',12);
+
 }
 
 function drawNPC(n){
@@ -710,11 +747,13 @@ tick++;
 g.imageSmoothingEnabled=false;
 let dx=(keys['arrowright']||keys[bindings.right]?1:0)-(keys['arrowleft']||keys[bindings.left]?1:0);
 let dy=(keys['arrowdown']||keys[bindings.down]?1:0)-(keys['arrowup']||keys[bindings.up]?1:0);
+playerVelocity={x:0,y:0};
 if((dx||dy)&&!dead&&!menuActive&&!$('questMenu').classList.contains('open')&&!$('shop').classList.contains('open')&&!$('inventory').classList.contains('open')&&!$('saveMenu').classList.contains('open')){
 const mag=Math.hypot(dx,dy);facing={x:dx/mag,y:dy/mag};
 let speed=2.7/Math.hypot(dx,dy);
 p.x=Math.max(25,Math.min(935,p.x+dx*speed));
 p.y=Math.max(175,Math.min(570,p.y+dy*speed));
+playerVelocity={x:dx*speed,y:dy*speed};walkCycle=(walkCycle+Math.hypot(dx,dy)*.07)%1;
 }
 // Poring AI: pursue nearby players, attack with a cooldown, and respawn.
 if(invulnerable>0)invulnerable--;
