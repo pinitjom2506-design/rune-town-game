@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v34</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v35</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -245,6 +245,7 @@ $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
 $('skillBtn').disabled=p.lv<2||!['normal','gold','diamond'].includes(p.weapon);
+$('skillBtn').textContent=p.weapon==='diamond'?'💎 C ฟันไขว้':p.weapon==='gold'?'✨ C พายุทอง':'🌊 C สกิล';
 $('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':p.weapon==='diamond'?'กด C: ฟันไขว้เพชร 2 ครั้ง (คูลดาวน์ 7 วินาที)':p.weapon==='gold'?'กด C: พายุคมดาบทอง ฟันรัวรอบตัว (คูลดาวน์ 8 วินาที)':p.weapon!=='normal'?'สกิลยังไม่พร้อมสำหรับดาบนี้':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
 $('quest').textContent=p.activeQuest===1?`เควส 1: Poring ${Math.min(5,p.kills)}/5`:p.activeQuest===2?`เควส 2: กระต่าย ${Math.min(3,p.rabbitKills)}/3`:'เควส: คุยกับ NPC เพื่อเลือกเควส';
 }
@@ -423,8 +424,8 @@ function drawGoldenSkill(){
 }
 function useSkill(){
  if(dead){say('ไม่สามารถใช้สกิลขณะหมดสติ');return}
- if(p.lv<2){say('🔒 สกิลคลื่นดาบปลดล็อกที่เลเวล 2');return}
- if(!['normal','gold'].includes(p.weapon)){say('⚔️ ดาบนี้ยังไม่มีสกิลเฉพาะ');return}
+ if(p.lv<2){say('🔒 สกิลปลดล็อกเมื่อเลเวล 2');return}
+ if(!['normal','gold','diamond'].includes(p.weapon)){say('⚔️ ดาบนี้ยังไม่มีสกิลเฉพาะ');return}
  if($('inventory').classList.contains('open')||$('shop').classList.contains('open')||$('questMenu').classList.contains('open'))return;
  const now=Date.now();
  if(now<skillReadyAt){say('สกิลกำลังคูลดาวน์ อีก '+Math.ceil((skillReadyAt-now)/1000)+' วินาที');return}
