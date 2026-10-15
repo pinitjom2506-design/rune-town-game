@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v41 — New Player Walk</title>
+<title>Rune Town v42 — Knight Walk</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>🎒 RUNE TOWN — PLAYER WALK v41</strong>
+<strong>⚔️ RUNE TOWN — KNIGHT WALK v42</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -551,62 +551,61 @@ function character(x,y,color,player=false){
   ellipse(x,y-52,15,8,'#795448');return;
  }
 
- // Player-only five-pose walking cycle: contact / down / passing / up / contact.
- // Saved equipment changes damage and skills, never replaces the civilian avatar.
- const moving=!dead&&(Math.abs(playerVelocity.x)+Math.abs(playerVelocity.y)>0.01);
- const dir=facing.x<-.2?-1:1;
- const phase=moving?(walkCycle%1):0;
- const gait=Math.sin(phase*Math.PI*2),other=Math.sin(phase*Math.PI*2+Math.PI);
- const bounce=moving?Math.round(Math.abs(Math.sin(phase*Math.PI*2))*2):0;
- const lean=moving?Math.round(Math.sin(phase*Math.PI*2)*1.3):0;
- g.save();g.translate(Math.round(x),Math.round(y+bounce));g.scale(dir,1);
- const P=(x,y,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),w,h)};
- const line=(x1,y1,x2,y2,width,c)=>{g.strokeStyle=c;g.lineWidth=width;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()};
- ellipse(0,6,22,6,'#0005');
- // Alternate foot contact, lowering, passing and lifting, with grounded feet.
- for(const [side,step] of [[-1,gait],[1,other]]){
-  const hipX=side*6,hipY=-37;
-  const footX=side*5+step*13,footY=-4-Math.max(0,-step)*10;
-  const kneeX=hipX+step*6+(side===-1?-3:3),kneeY=-20+Math.max(0,-step)*3;
-  line(hipX,hipY,kneeX,kneeY,11,'#273d52');
-  line(hipX,hipY,kneeX,kneeY,8,'#5d829e');
-  line(kneeX,kneeY,footX,footY,10,'#26394b');
-  line(kneeX,kneeY,footX,footY,7,'#527893');
-  line(footX-2,footY,footX+9,footY+1,8,'#1b2630');
-  P(footX+1,footY-1,7,2,'#f3f3e7');
+ // Five-phase walk animation on the ORIGINAL armored knight.
+ const moving=!dead&&(Math.abs(playerVelocity.x)+Math.abs(playerVelocity.y)>.01);
+ const phase=moving?walkCycle:0,step=Math.sin(phase*Math.PI*2);
+ const bob=moving?Math.round(Math.abs(Math.sin(phase*Math.PI*2))*2):0;
+ const direction=facing.x<-.2?-1:1;
+ g.save();g.translate(Math.round(x),Math.round(y+bob));g.scale(direction,1);
+ const P=(a,b,w,h,c)=>{g.fillStyle=c;g.fillRect(Math.round(a),Math.round(b),w,h)};
+ const L=(x1,y1,x2,y2,w,c)=>{g.strokeStyle=c;g.lineWidth=w;g.lineCap='round';g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()};
+ ellipse(0,7,24,7,'#0005');
+ // Contact / down / passing / up / contact: alternating articulated plate-armored legs.
+ for(const [side,phaseOffset] of [[-1,0],[1,Math.PI]]){
+  const stride=moving?Math.sin(phase*Math.PI*2+phaseOffset):0;
+  const lift=moving?Math.max(0,-stride)*11:0;
+  const hipX=side*8,kneeX=hipX+stride*9,footX=side*8+stride*19;
+  L(hipX,-43,kneeX,-24+lift*.25,13,'#1a2634');
+  L(hipX,-43,kneeX,-24+lift*.25,9,'#5b7189');
+  L(kneeX,-24+lift*.25,footX,-6-lift,12,'#1b2b3b');
+  L(kneeX,-24+lift*.25,footX,-6-lift,8,'#8399ae');
+  L(footX-3,-5-lift,footX+10,-5-lift,10,'#263645');
+  L(footX,-8-lift,footX+9,-8-lift,4,'#d1dfe6');
+  P(kneeX-4,-28+lift*.25,8,4,'#c7d9e6');
  }
- // Backpack and shoulder straps, blue zip-up jacket and white shirt.
- P(-22,-76,16,35,'#1d2530');P(-20,-73,13,30,'#3e4247');
- P(-21,-60,5,16,'#66747c');
- P(-12+lean,-75,27,40,'#233e59');
- P(-9+lean,-73,24,34,'#34648d');
- P(-3+lean,-72,12,32,'#f2f3eb');
- P(-13+lean,-72,6,32,'#1e3956');
- P(10+lean,-73,6,34,'#19384e');
- P(-9+lean,-43,22,6,'#29415a');
- // Arm swing counterbalances the walking legs.
- const arm=gait*12;
- line(-12+lean,-68,-18-arm*.45,-48+arm*.2,11,'#203c55');
- line(-12+lean,-68,-18-arm*.45,-48+arm*.2,8,'#37658a');
- line(-18-arm*.45,-48+arm*.2,-13-arm,-34+arm*.35,8,'#285174');
- line(-13-arm,-34+arm*.35,-12-arm,-28+arm*.35,6,'#f0bd9d');
- line(13+lean,-68,17+arm*.5,-47-arm*.15,11,'#1b354e');
- line(13+lean,-68,17+arm*.5,-47-arm*.15,8,'#386a91');
- line(17+arm*.5,-47-arm*.15,14+arm,-32-arm*.35,8,'#2a5277');
- line(14+arm,-32-arm*.35,13+arm,-27-arm*.35,6,'#efb797');
- // Neck, face and distinct tousled brown hair.
- P(-2,-83,9,12,'#e5aa87');
- P(-9,-106,26,29,'#302b2c');
- P(-7,-104,25,26,'#efc3a0');
- P(13,-93,5,8,'#eab28f');
- P(7,-96,3,3,'#26303b');
- P(17,-90,4,2,'#a06d59');
- for(const [hx,hy,hw,hh] of [[-11,-110,27,10],[-15,-106,11,12],[-7,-115,10,12],[2,-117,12,11],[12,-111,10,13],[16,-105,7,8]])P(hx,hy,hw,hh,'#4b352d');
- P(-7,-111,13,4,'#73513b');P(2,-114,10,3,'#6a4b37');
- if(dead){g.globalAlpha=.45}
+ // Original dark armor, red cape and silver chest plate.
+ for(let i=0;i<8;i++){const flutter=moving?Math.sin(phase*6.28+i*.7)*3:0;P(13+i*2+flutter,-77+i*4,18,9,i%2?'#9f2637':'#d0434c')}
+ P(-18,-80,36,40,'#1d2a3d');P(-14,-78,28,35,'#435a70');
+ P(-11,-75,22,28,'#92a8b9');P(-8,-72,16,21,'#c6d8df');
+ P(-4,-69,8,15,'#e5eff3');P(-15,-46,30,8,'#28394b');
+ P(-17,-80,9,12,'#c2d1dd');P(8,-80,10,12,'#b2c5d3');
+ // Arms swing opposite the legs; shield and sword remain equipped.
+ const swing=moving?step*9:0;
+ L(-16,-72,-22-swing*.4,-53+swing*.25,13,'#26384b');
+ L(-16,-72,-22-swing*.4,-53+swing*.25,9,'#8da4b8');
+ L(-22-swing*.4,-53+swing*.25,-19-swing,-38+swing*.4,10,'#435c72');
+ P(-24-swing,-42+swing*.4,10,8,'#d2dce2');
+ L(16,-72,22+swing*.4,-54-swing*.25,13,'#26384b');
+ L(16,-72,22+swing*.4,-54-swing*.25,9,'#879cb2');
+ L(22+swing*.4,-54-swing*.25,20+swing,-39-swing*.4,10,'#42566d');
+ P(15+swing,-42-swing*.4,10,8,'#c4d6e2');
+ // Visored helm and gold crest.
+ P(-15,-107,30,29,'#1c2b3c');P(-12,-105,24,26,'#6e889f');
+ P(-9,-103,18,10,'#c9dbe8');P(-10,-92,20,7,'#25394c');
+ P(-6,-90,12,4,'#9db6c9');P(-4,-113,8,12,'#e2ba5e');
+ P(-11,-109,6,7,'#b7cad8');P(5,-109,6,7,'#b7cad8');
+ // Weapon changes color with the equipped sword; same combat stats and skills.
+ const blade={normal:'#d7ebf5',gold:'#ffd44b',diamond:'#54f1ff',lightning:'#f5e94a',emerald:'#42f0a3',ruby:'#fa4266',void:'#a265f6',lord:'#ffdf80'}[p.weapon]||'#d7ebf5';
+ const swordShift=moving?swing*.65:0;
+ L(-26-swing,-42+swing*.4,-37-swing+swordShift,-93+swing*.4,8,'#233344');
+ L(-26-swing,-42+swing*.4,-37-swing+swordShift,-93+swing*.4,4,blade);
+ P(-37-swing+swordShift,-96+swing*.4,5,9,'#f5ffff');
+ L(-33-swing,-51+swing*.4,-19-swing,-55+swing*.4,5,'#e5c47a');
+ P(15+swing,-61-swing*.4,21,35,'#263a4b');
+ P(18+swing,-58-swing*.4,15,28,'#829aab');
+ P(23+swing,-54-swing*.4,7,7,'#e1d9b7');
  g.restore();
- text('YOU',x,y-123+bounce,'#ffe77e',12);
-
+ text('YOU',x,y-124+bob,'#ffe77e',12);
 }
 
 function drawNPC(n){
