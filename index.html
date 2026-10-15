@@ -31,6 +31,13 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 
 #shop{position:absolute;inset:0;background:#081522c9;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
 #shop.open{display:flex}
+#inventory{position:absolute;inset:0;background:#081522df;display:none;align-items:center;justify-content:center;z-index:13;padding:16px}
+#inventory.open{display:flex}
+#inventoryPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:18px;width:min(420px,100%)}
+#inventorySlots{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
+.invSlot{background:#182b3e;border:2px solid #637b8a;min-height:64px;padding:6px;text-align:center;font-size:12px;border-radius:5px}
+.invSlot.equipped{border-color:#ffe47b}
+#skillBtn:disabled{opacity:.55;filter:grayscale(1)}
 #questMenu{position:absolute;inset:0;background:#081522d9;display:none;align-items:center;justify-content:center;z-index:12;padding:16px}
 #questMenu.open{display:flex}
 #questPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:20px;max-width:440px;width:100%}
@@ -44,7 +51,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v24</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v25</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -59,6 +66,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </div>
 <div id="shop"><div id="shopPanel"><h2>⚔ ร้านขายอาวุธ</h2><p id="shopBalance"></p><div class="shopItem"><span>🗡️ ดาบทอง<br><small>1,500 Zeny · ระยะโจมตี 105</small></span><button onclick="buySword('gold')">ซื้อ / สวมใส่</button></div><div class="shopItem"><span>💎 ดาบเพชร<br><small>5,000 Zeny · ระยะโจมตี 145</small></span><button onclick="buySword('diamond')">ซื้อ / สวมใส่</button></div><p id="shopNotice"></p><button onclick="closeShop()">ปิดร้านค้า ✕</button></div></div>
 <div id="questMenu"><div id="questPanel"><h2>📜 เลือกเควส</h2><p id="questStatus">เลือกเควสที่ต้องการทำ</p><button onclick="chooseQuest(1)">เควส 1: กำจัด Poring 5/5</button><button onclick="chooseQuest(2)">เควส 2: กำจัดกระต่ายธาตุพืช 3/3</button><button onclick="closeQuestMenu()">ปิด ✕</button></div></div>
+<div id="inventory"><div id="inventoryPanel"><h2>🎒 ช่องเก็บของ</h2><p id="inventoryInfo"></p><div id="inventorySlots"></div><button onclick="closeInventory()">ปิดช่องเก็บของ ✕</button></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
 <div id="controls">
 <button id="saveBtn" onclick="save()">💾 บันทึก</button>
@@ -68,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <button data-key="ArrowDown">▼</button>
 <button data-key="ArrowRight">▶</button>
 </div>
-<div id="actions"><button onclick="attack()">⚔ โจมตี</button><button onclick="interact()">💬 คุย</button></div>
+<div id="actions"><button id="skillBtn" onclick="useSkill()">🌊 C สกิล</button><button onclick="attack()">⚔ โจมตี</button><button onclick="interact()">💬 คุย</button><button onclick="toggleInventory()">🎒 I</button></div>
 </div>
 </div>
 <script>
@@ -84,7 +92,7 @@ if(!Array.isArray(p.owned))p.owned=['normal'];
 if(!['normal','gold','diamond'].includes(p.weapon))p.weapon='normal';
 if(![0,1,2].includes(p.activeQuest))p.activeQuest=0;
 p.rabbitKills=Math.max(0,Math.floor(Number(p.rabbitKills)||0));
-let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[];
+let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[],skillEffect=null,skillReadyAt=0;
 let npcs=[
 {x:265,y:230,name:'Kafra',color:'#f6d6a0'},
 {x:695,y:250,name:'ร้านค้า',color:'#d8aaff'},
@@ -108,6 +116,8 @@ $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ดาบ${p.weapon==='dia
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
+$('skillBtn').disabled=p.lv<2;
+$('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
 $('quest').textContent=p.activeQuest===1?`เควส 1: Poring ${Math.min(5,p.kills)}/5`:p.activeQuest===2?`เควส 2: กระต่าย ${Math.min(3,p.rabbitKills)}/3`:'เควส: คุยกับ NPC เพื่อเลือกเควส';
 }
 function revive(){p.hp=p.max;p.x=480;p.y=340;dead=false;invulnerable=120;say('ฟื้นคืนชีพแล้ว! ได้รับการคุ้มครองชั่วคราว');updateHUD()}
@@ -127,6 +137,22 @@ function buySword(kind){
  saveSilent();
 }
 function saveSilent(){localStorage.setItem('rune-save',JSON.stringify(p))}
+function closeInventory(){$('inventory').classList.remove('open')}
+function toggleInventory(){
+ if($('inventory').classList.contains('open')){closeInventory();return}
+ $('shop').classList.remove('open');$('questMenu').classList.remove('open');
+ const slots=$('inventorySlots');slots.textContent='';
+ const names={normal:'🗡️ ดาบธรรมดา',gold:'⚔️ ดาบทอง',diamond:'💎 ดาบเพชร'};
+ for(let i=0;i<16;i++){
+  const slot=document.createElement('div');slot.className='invSlot';
+  const item=p.owned[i];
+  if(item){slot.textContent=names[item]||item;if(item===p.weapon)slot.classList.add('equipped');slot.title='คลิกเพื่อสวมใส่';slot.style.cursor='pointer';slot.onclick=()=>{p.weapon=item;saveSilent();updateHUD();toggleInventory();toggleInventory()}}
+  else slot.textContent='ช่องว่าง';
+  slots.appendChild(slot);
+ }
+ $('inventoryInfo').textContent='อาวุธ '+p.owned.length+'/16 ช่อง · คลิกอาวุธเพื่อสวมใส่';
+ $('inventory').classList.add('open');
+}
 function closeQuestMenu(){$('questMenu').classList.remove('open')}
 function openQuestMenu(){
  $('questStatus').textContent=p.activeQuest===1?'เควสที่ทำอยู่: Poring '+Math.min(5,p.kills)+'/5':p.activeQuest===2?'เควสที่ทำอยู่: กระต่าย '+Math.min(3,p.rabbitKills)+'/3':'เลือกเควสที่ต้องการทำ';
@@ -155,6 +181,7 @@ function chooseQuest(id){
 }
 function interact(){
  if(dead){revive();return}
+ if($('inventory').classList.contains('open')){closeInventory();return}
  if($('shop').classList.contains('open')){closeShop();return}
  if($('questMenu').classList.contains('open')){closeQuestMenu();return}
  const n=npcs.find(n=>near(p,n,75));
@@ -164,36 +191,65 @@ function interact(){
  else openQuestMenu();
  updateHUD();
 }
-function attack(){
-if(dead){say('คุณหมดสติ! กดคุยเพื่อฟื้นคืนชีพ');return}
-hit=20;
-slash={x:p.x,y:p.y-30,dx:facing.x,dy:facing.y,life:20};
-let range=p.weapon==='diamond'?145:p.weapon==='gold'?105:75;
-let m=mobs.find(m=>m.alive&&near(p,m,range));
-if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
-const damage=Math.round((p.weapon==='diamond'?65:p.weapon==='gold'?40:20)*levelDamageMultiplier());
-m.hp=Math.max(0,m.hp-damage);
-damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
-if(m.hp>0){say('โจมตี '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! สร้างความเสียหาย '+damage);return}
-m.alive=false;m.respawn=240;
-const expGain=Math.round((p.weapon==='diamond'?80:p.weapon==='gold'?40:20)*levelExpMultiplier()*(m.type==='plantRabbit'?2:1));
-if(p.lv<MAX_LEVEL)p.exp+=expGain;p.zeny+=m.type==='plantRabbit'?20:10;if(m.type==='plantRabbit'){if(p.activeQuest===2)p.rabbitKills++}else{if(p.activeQuest===1)p.kills++}
-say('กำจัด '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! '+damage+' DMG, +'+(p.lv>=MAX_LEVEL?0:expGain)+' EXP, +'+(m.type==='plantRabbit'?20:10)+' Zeny');
-while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){
-p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;
-say('LEVEL UP! เลเวล '+p.lv)
+function defeatMonster(m,damage){
+ m.alive=false;m.respawn=240;
+ const expGain=p.lv>=MAX_LEVEL?0:Math.round((p.weapon==='diamond'?80:p.weapon==='gold'?40:20)*levelExpMultiplier()*(m.type==='plantRabbit'?2:1));
+ p.exp+=expGain;p.zeny+=m.type==='plantRabbit'?20:10;
+ if(m.type==='plantRabbit'){if(p.activeQuest===2)p.rabbitKills++}
+ else if(p.activeQuest===1)p.kills++;
+ say('กำจัด '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! +'+expGain+' EXP');
+ while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
+ if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
+ completeQuest();updateHUD();
 }
-if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0;}
-completeQuest();
-updateHUD()
+function damageMonster(m,damage){
+ m.hp=Math.max(0,m.hp-damage);
+ damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
+ if(m.hp===0)defeatMonster(m,damage);
+}
+function attack(){
+ if(dead){say('คุณหมดสติ! กดคุยเพื่อฟื้นคืนชีพ');return}
+ hit=20;slash={x:p.x,y:p.y-30,dx:facing.x,dy:facing.y,life:20};
+ const range=p.weapon==='diamond'?145:p.weapon==='gold'?105:75;
+ const m=mobs.find(m=>m.alive&&near(p,m,range));
+ if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
+ const damage=Math.round((p.weapon==='diamond'?65:p.weapon==='gold'?40:20)*levelDamageMultiplier());
+ damageMonster(m,damage);
+ if(m.alive)say('โจมตี '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! '+damage+' DMG');
+}
+function useSkill(){
+ if(dead){say('ไม่สามารถใช้สกิลขณะหมดสติ');return}
+ if(p.lv<2){say('🔒 สกิลคลื่นดาบปลดล็อกที่เลเวล 2');return}
+ if($('inventory').classList.contains('open')||$('shop').classList.contains('open')||$('questMenu').classList.contains('open'))return;
+ const now=Date.now();
+ if(now<skillReadyAt){say('สกิลกำลังคูลดาวน์ อีก '+Math.ceil((skillReadyAt-now)/1000)+' วินาที');return}
+ skillReadyAt=now+6000;
+ const sx=p.x,sy=p.y;
+ // Forward dash and broad blue crescent, matching the reference's action pose.
+ p.x=Math.max(25,Math.min(935,p.x+facing.x*115));
+ p.y=Math.max(175,Math.min(570,p.y+facing.y*115));
+ skillEffect={x:p.x,y:p.y,dx:facing.x,dy:facing.y,life:22};
+ hit=22;
+ const damage=Math.round((p.weapon==='diamond'?65:p.weapon==='gold'?40:20)*levelDamageMultiplier()*2.5);
+ let count=0;
+ for(const m of mobs){
+  if(!m.alive)continue;
+  const vx=m.x-p.x,vy=m.y-p.y;
+  if(Math.hypot(vx,vy)<165 && vx*facing.x+vy*facing.y>=-65){damageMonster(m,damage);count++}
+ }
+ if(count===0)say('🌊 พุ่งฟันคลื่นดาบ! ไม่มีศัตรูโดนโจมตี');
+ else if(p.activeQuest)say('🌊 พุ่งฟันคลื่นดาบ! โจมตี '+count+' ตัว · '+damage+' DMG/ตัว');
+ updateHUD();
 }
 document.addEventListener('keydown',e=>{
 const key=e.key.toLowerCase();
 keys[key]=true;
-if(['arrowup','arrowdown','arrowleft','arrowright',' ','e'].includes(key))e.preventDefault();
+if(['arrowup','arrowdown','arrowleft','arrowright',' ','e','c','i'].includes(key))e.preventDefault();
 if(e.repeat)return;
 if(key===' ')attack();
 if(key==='e'||e.code==='KeyE')interact();
+if(key==='c'||e.code==='KeyC')useSkill();
+if(key==='i'||e.code==='KeyI')toggleInventory();
 });
 document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
 document.querySelectorAll('[data-key]').forEach(b=>{
@@ -445,6 +501,20 @@ text('Poring',m.x,m.y-48+bounce,'#ffe2ed',12);
 rect(m.x-25,m.y-43+bounce,50,8,'#2b2230');
 rect(m.x-23,m.y-41+bounce,46*(m.hp/m.maxHp),4,m.hp>30?'#55d45a':'#f15c5c')
 });
+if(skillEffect&&skillEffect.life-->0){
+ const e=skillEffect,progress=(22-e.life)/22;
+ g.save();g.translate(e.x,e.y-35);g.rotate(Math.atan2(e.dy,e.dx));
+ // Layered luminous pixel crescent and dash afterimages.
+ for(let i=0;i<4;i++){
+  const radius=42+i*13+progress*32;
+  g.strokeStyle=['#c8ffff','#50efff','#00a9ef','#1765ba'][i];
+  g.lineWidth=9-i;
+  g.beginPath();g.arc(25,0,radius,-1.15,1.15);g.stroke();
+ }
+ for(let i=0;i<5;i++)rect(-35-i*21,(-2+i%3)*9,26,4,i%2?'#7ceaff':'#d4ffff');
+ g.restore();
+ if(e.life<=0)skillEffect=null;
+}
 if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
 damageTexts=damageTexts.filter(d=>d.life>0);
 damageTexts.forEach(d=>{d.y-=0.8;d.life--;text('-'+d.value,d.x,d.y,'#ffdf4b',20)});
