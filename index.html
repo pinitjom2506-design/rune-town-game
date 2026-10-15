@@ -23,7 +23,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v5</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v6</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -56,7 +56,7 @@ g.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id);
 let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0};
 try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
-let keys={},tick=0,hit=0,invulnerable=0,dead=false;
+let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0};
 let npcs=[
 {x:265,y:230,name:'Kafra',color:'#f6d6a0'},
 {x:695,y:250,name:'ร้านค้า',color:'#d8aaff'},
@@ -95,6 +95,7 @@ updateHUD()
 function attack(){
 if(dead){say('คุณหมดสติ! กดคุยเพื่อฟื้นคืนชีพ');return}
 hit=20;
+slash={x:p.x,y:p.y-30,dx:facing.x,dy:facing.y,life:20};
 let m=mobs.find(m=>m.alive&&near(p,m,75));
 if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
 m.alive=false;m.respawn=240;
@@ -207,6 +208,7 @@ g.imageSmoothingEnabled=false;
 let dx=(keys['arrowright']||keys['d']?1:0)-(keys['arrowleft']||keys['a']?1:0);
 let dy=(keys['arrowdown']||keys['s']?1:0)-(keys['arrowup']||keys['w']?1:0);
 if((dx||dy)&&!dead){
+const mag=Math.hypot(dx,dy);facing={x:dx/mag,y:dy/mag};
 let speed=2.7/Math.hypot(dx,dy);
 p.x=Math.max(25,Math.min(935,p.x+dx*speed));
 p.y=Math.max(175,Math.min(570,p.y+dy*speed));
@@ -285,20 +287,24 @@ text('Poring',m.x,m.y-32+bounce,'#ffe2ed',12)
 });
 if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
 if(dead){rect(260,260,440,76,'#15151ddd');text('คุณหมดสติ!',480,291,'#ff7788',28);text('กด คุย หรือ E เพื่อฟื้นคืนชีพ',480,321,'#ffffff',17)}
-if(hit>0){
-hit--;
-g.save();
-g.translate(p.x,p.y-30);
-g.lineCap='butt';
-const radius=65+(20-hit)*3;
-for(const layer of [[26,'#164db4'],[19,'#159ce5'],[12,'#24e6ff'],[5,'#f5ffff']]){
- g.strokeStyle=layer[1];g.lineWidth=layer[0];
- g.beginPath();
- g.arc(32,0,radius,-1.7,1.1);
- g.stroke();
+if(hit>0)hit--;
+if(slash&&slash.life>0){
+ slash.x+=slash.dx*8;
+ slash.y+=slash.dy*8;
+ slash.life--;
+ g.save();
+ g.translate(Math.round(slash.x),Math.round(slash.y));
+ g.rotate(Math.atan2(slash.dy,slash.dx));
+ g.lineCap='butt';
+ // Fixed-size single crescent projectile, travelling in facing direction.
+ for(const layer of [[26,'#164db4'],[19,'#159ce5'],[12,'#24e6ff'],[5,'#f5ffff']]){
+  g.strokeStyle=layer[1];g.lineWidth=layer[0];
+  g.beginPath();g.arc(0,0,65,-1.7,1.1);g.stroke();
+ }
+ g.restore();
+ if(slash.life===0)slash=null;
 }
-g.restore()
-}
+
 updateHUD();
 requestAnimationFrame(draw)
 }
