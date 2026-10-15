@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v42 — Knight Walk</title>
+<title>Rune Town v43 — Detailed Swords</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — KNIGHT WALK v42</strong>
+<strong>⚔️ RUNE TOWN — REALISTIC SWORDS v43</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -594,13 +594,49 @@ function character(x,y,color,player=false){
  P(-9,-103,18,10,'#c9dbe8');P(-10,-92,20,7,'#25394c');
  P(-6,-90,12,4,'#9db6c9');P(-4,-113,8,12,'#e2ba5e');
  P(-11,-109,6,7,'#b7cad8');P(5,-109,6,7,'#b7cad8');
- // Weapon changes color with the equipped sword; same combat stats and skills.
- const blade={normal:'#d7ebf5',gold:'#ffd44b',diamond:'#54f1ff',lightning:'#f5e94a',emerald:'#42f0a3',ruby:'#fa4266',void:'#a265f6',lord:'#ffdf80'}[p.weapon]||'#d7ebf5';
- const swordShift=moving?swing*.65:0;
- L(-26-swing,-42+swing*.4,-37-swing+swordShift,-93+swing*.4,8,'#233344');
- L(-26-swing,-42+swing*.4,-37-swing+swordShift,-93+swing*.4,4,blade);
- P(-37-swing+swordShift,-96+swing*.4,5,9,'#f5ffff');
- L(-33-swing,-51+swing*.4,-19-swing,-55+swing*.4,5,'#e5c47a');
+ // High-detail weapon renderer: forged steel, beveled edges, reflections, jeweled hilt.
+ const swordLooks={
+ normal:{edge:'#e5f5ff',core:'#a5bacb',shadow:'#526c82',glow:'#a9e5ff',gem:'#8fc8ee'},
+ gold:{edge:'#fff3a3',core:'#eab94c',shadow:'#966027',glow:'#ffcd4b',gem:'#fff5d1'},
+ diamond:{edge:'#f4ffff',core:'#64dfff',shadow:'#2379b8',glow:'#3bcfff',gem:'#ffffff'},
+ lightning:{edge:'#fffbb7',core:'#f8dd46',shadow:'#ac8520',glow:'#fbe94b',gem:'#eaffff'},
+ emerald:{edge:'#caffd8',core:'#45d999',shadow:'#187955',glow:'#49ffb4',gem:'#edffb8'},
+ ruby:{edge:'#ffd3dd',core:'#f44d71',shadow:'#98233f',glow:'#ff496c',gem:'#fff0d5'},
+ void:{edge:'#e2c5ff',core:'#965ce4',shadow:'#3d226c',glow:'#aa67ff',gem:'#d7baff'},
+ lord:{edge:'#fff9c4',core:'#eac16c',shadow:'#8e6331',glow:'#ffd66d',gem:'#fff7ff'}
+ };
+ const metal=swordLooks[p.weapon]||swordLooks.normal;
+ // The weapon pivots with the knight's walking arm without affecting combat logic.
+ g.save();
+ g.translate(-25-swing,-43+swing*.4);
+ g.rotate(-.19+(moving?Math.sin(phase*Math.PI*2)*.10:0)+(hit>0?.25:0));
+ const swordPath=(pts,color)=>{g.beginPath();g.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)g.lineTo(pts[i][0],pts[i][1]);g.closePath();g.fillStyle=color;g.fill()};
+ // Leather grip, bronze pommel, ornate swept crossguard.
+ P(-3,0,6,15,'#392b2b');P(-2,1,4,13,'#81563e');
+ for(let j=2;j<14;j+=4)P(-2,j,4,1,'#d8b37c');
+ P(-5,13,10,5,'#8b6b43');P(-3,14,6,3,'#ffdc85');
+ swordPath([[-15,-4],[-11,-9],[-4,-6],[0,-3],[4,-6],[11,-9],[15,-4],[10,-1],[4,0],[-4,0],[-10,-1]],'#b68b47');
+ swordPath([[-13,-5],[-9,-7],[-3,-4],[0,-3],[3,-4],[9,-7],[13,-5],[9,-3],[3,-2],[-3,-2],[-9,-3]],'#ffdf8b');
+ P(-3,-8,6,7,'#453c45');P(-2,-7,4,5,metal.gem);
+ // Full-length tapered blade with dark forged spine and sharp bright edges.
+ swordPath([[-7,-7],[-6,-53],[0,-72],[6,-53],[7,-7]],metal.shadow);
+ swordPath([[-6,-8],[-5,-53],[0,-70],[0,-8]],metal.edge);
+ swordPath([[0,-8],[0,-70],[5,-53],[6,-8]],metal.core);
+ swordPath([[-1,-12],[-1,-57],[0,-64],[2,-54],[2,-12]],'#ffffff8a');
+ g.strokeStyle='#ffffffbd';g.lineWidth=1.2;g.beginPath();g.moveTo(-5,-13);g.lineTo(-5,-51);g.lineTo(0,-68);g.stroke();
+ g.strokeStyle=metal.shadow;g.lineWidth=1;g.beginPath();g.moveTo(0,-15);g.lineTo(0,-57);g.stroke();
+ // Decorative fuller and engraved runic markings.
+ for(let j=0;j<3;j++){const yy=-23-j*10;P(-2,yy,4,2,j%2?metal.gem:'#f4faff')}
+ if(p.weapon!=='normal'){
+  g.save();g.globalCompositeOperation='lighter';g.shadowColor=metal.glow;g.shadowBlur=12;
+  g.strokeStyle=metal.glow;g.globalAlpha=.65;g.lineWidth=2;
+  g.beginPath();g.moveTo(-5,-12);g.lineTo(-5,-51);g.lineTo(0,-69);g.lineTo(5,-51);g.lineTo(5,-12);g.stroke();
+  const sparkle=Math.sin(tick*.11)*.5+.5;
+  g.fillStyle='#fff';g.globalAlpha=.45+sparkle*.5;
+  g.beginPath();g.moveTo(4,-48);g.lineTo(6,-44);g.lineTo(10,-42);g.lineTo(6,-40);g.lineTo(4,-36);g.lineTo(2,-40);g.lineTo(-2,-42);g.lineTo(2,-44);g.closePath();g.fill();
+  g.restore();
+ }
+ g.restore();
  P(15+swing,-61-swing*.4,21,35,'#263a4b');
  P(18+swing,-58-swing*.4,15,28,'#829aab');
  P(23+swing,-54-swing*.4,7,7,'#e1d9b7');
