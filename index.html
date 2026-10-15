@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v45 — Smooth Idle Animation</title>
+<title>Rune Town v46 — 3D Town</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — SMOOTH IDLE v45</strong>
+<strong>⚔️ RUNE TOWN — 3D TOWN v46</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -811,6 +811,124 @@ function drawTownBackdrop(){
   fill(522,481,214,3,'#283a36');fill(522,495,214,3,'#283a36');
   // Ambient pedestrians as distant decorative sprites (real NPCs remain interactive).
   for(let i=0;i<19;i++){const x=205+(i*137)%555,y=240+(i*83)%246;if(Math.hypot(x-633,y-430)<125)continue;oval(x,y+2,11,4,'#403c3850');oval(x,y-26,8,9,['#f4c6a5','#dfaa90','#efc1aa'][i%3]);fill(x-8,y-18,16,19,['#a96758','#5c78a0','#7c6559','#b98a63'][i%4]);fill(x-7,y,5,8,'#70584c');fill(x+2,y,5,8,'#70584c');fill(x-9,y-31,18,5,['#8e5142','#725043','#bd8e55'][i%3])}
+
+  // High-definition pseudo-3D architectural pass. Painted once to an offscreen canvas.
+  b.save();b.imageSmoothingEnabled=true;
+  const stroke=(pts,color,width=1)=>{b.beginPath();b.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)b.lineTo(...pts[i]);b.strokeStyle=color;b.lineWidth=width;b.stroke()};
+  const shadow=(x,y,rx,ry)=>{b.save();b.filter='blur(10px)';oval(x,y,rx,ry,'#3d342b42');b.restore()};
+  // Perspective paving: individually outlined irregular stones, joints and sunlit bevels.
+  for(let row=0;row<26;row++){
+   const y=178+row*17;
+   const scale=.64+row*.027;
+   const tile=28*scale;
+   const shift=(row%2)*tile*.5;
+   for(let j=-2;j<Math.ceil(960/tile)+2;j++){
+    const x=j*tile+shift;
+    const jitter=rng(j*11+row*31);
+    b.beginPath();b.moveTo(x+1,y+2);b.lineTo(x+tile-2,y+1+jitter*2);b.lineTo(x+tile-3,y+14);b.lineTo(x+2,y+16);b.closePath();
+    b.strokeStyle='#8d82703b';b.lineWidth=1.2;b.stroke();
+    stroke([[x+3,y+3],[x+tile-5,y+3]],'#fffdf074',1.2);
+    if(jitter>.78){fill(x+tile*.38,y+9,3,2,'#c4b49a8a')}
+   }
+  }
+  // Sunlit round stone towers with curved mortar, crenellations and depth shading.
+  function tower3D(x,y,w,h){
+   const grad=b.createLinearGradient(x,y,x+w,y);
+   grad.addColorStop(0,'#6f655b');grad.addColorStop(.17,'#c1b5a2');grad.addColorStop(.45,'#f6e6c9');grad.addColorStop(.76,'#d6c8b2');grad.addColorStop(1,'#776f65');
+   b.fillStyle=grad;b.fillRect(x,y,w,h);
+   for(let yy=y+9;yy<y+h;yy+=13){
+    stroke([[x+2,yy],[x+w-2,yy]],'#81756573',1);
+    for(let xx=x+4+((Math.floor(yy/13)%2)*13);xx<x+w;xx+=25){
+     const offset=(xx-x)/w;
+     stroke([[xx,yy],[xx+(offset-.5)*2,yy+12]],'#8c80708c',1);
+     fill(xx+3,yy+2,11,2,'#fff5de4a');
+    }
+   }
+   for(let i=0;i<Math.ceil(w/20);i++){
+    const xx=x+i*20;
+    fill(xx,y-13,15,15,'#b7aa95');
+    fill(xx+2,y-12,10,3,'#f2e2c9');
+   }
+   fill(x-6,y+18,w+12,9,'#8b8276');
+   fill(x-6,y+18,w+12,3,'#e8dcc6');
+   fill(x-3,y+30,w+6,5,'#8c8072');
+   for(let i=0;i<3;i++){
+    const wx=x+14+i*(w-28)/2;
+    oval(wx,y+56,5,12,'#514d4a');
+    fill(wx-4,y+55,8,12,'#3b4a50');
+    fill(wx-3,y+55,2,10,'#94a5a3');
+   }
+  }
+  tower3D(255,0,92,165);tower3D(610,0,92,165);
+  // Three-dimensional keystone arch, masonry rim and castle heraldry.
+  b.save();
+  b.strokeStyle='#f4e4cb';b.lineWidth=11;b.beginPath();b.ellipse(480,162,99,110,0,Math.PI,Math.PI*2);b.stroke();
+  b.strokeStyle='#827668';b.lineWidth=4;b.beginPath();b.ellipse(480,163,105,115,0,Math.PI,Math.PI*2);b.stroke();
+  for(let i=0;i<15;i++){
+   const a=Math.PI+i*Math.PI/14;
+   const x=480+101*Math.cos(a),y=162+111*Math.sin(a);
+   stroke([[x,y],[x+12*Math.cos(a),y+12*Math.sin(a)]],'#786d60',2);
+  }
+  b.restore();
+  // Terracotta roof tiles, ridges, eaves and painted timber details.
+  function roof3D(x,y,w,h){
+   const gg=b.createLinearGradient(x,y-h,x,y+8);
+   gg.addColorStop(0,'#e9a36d');gg.addColorStop(.28,'#b35e40');gg.addColorStop(1,'#733d30');
+   poly([[x-14,y],[x+w*.48,y-h],[x+w+14,y]],'#583e35');
+   b.fillStyle=gg;b.beginPath();b.moveTo(x-12,y-3);b.lineTo(x+w*.48,y-h+3);b.lineTo(x+w+12,y-3);b.closePath();b.fill();
+   for(let row=0;row<7;row++){
+    const yy=y-h+row*h/7;
+    const width=(row+1)/7*w;
+    const left=x+w*.48-width*.48;
+    for(let k=0;k<Math.ceil(width/13);k++){
+     const xx=left+k*13;
+     if(xx<x-12||xx>x+w+12)continue;
+     stroke([[xx,yy+3],[xx+8,yy+5]],'#f5b9876e',1.6);
+     stroke([[xx+10,yy+5],[xx+10,yy+8]],'#653f37aa',1);
+    }
+   }
+   stroke([[x-15,y],[x+w+15,y]],'#573c32',5);
+   stroke([[x-13,y-3],[x+w+13,y-3]],'#d88a5e',2);
+  }
+  roof3D(-25,191,246,68);roof3D(755,183,245,70);
+  roof3D(-10,56,208,49);roof3D(786,52,206,49);
+  // Carved windows with frames and reflected glass.
+  for(const [xx,yy] of [[40,222],[129,233],[819,213],[915,236]]){
+   fill(xx-4,yy-4,34,51,'#5e4234');
+   fill(xx,yy,26,43,'#c7b9a1');
+   fill(xx+3,yy+3,20,37,'#3b647b');
+   fill(xx+5,yy+5,7,30,'#9cc5cc');
+   fill(xx+13,yy+3,3,37,'#e3d1ae');
+   fill(xx+2,yy+19,22,3,'#e3d1ae');
+   fill(xx-6,yy+42,38,5,'#ae8564');
+  }
+  // Foliage volume: layered leaf highlights and depth.
+  for(const [tx,ty,rx,ry] of [[230,125,67,49],[720,119,78,54],[45,495,74,58],[885,500,80,64]]){
+   shadow(tx+13,ty+31,rx*.8,ry*.4);
+   for(let i=0;i<90;i++){
+    const a=i*2.399,r=Math.sqrt(rng(i+tx))*rx;
+    const xx=tx+Math.cos(a)*r,yy=ty+Math.sin(a)*r*ry/rx;
+    oval(xx,yy,4+rng(i*4)*7,3+rng(i*3)*5,['#34794b','#4f9c56','#70b961','#a0cf71','#c0da84'][i%5]);
+   }
+  }
+  // Fountain with stone depth, turquoise reflections and water glints.
+  b.save();
+  const water=b.createRadialGradient(633,414,5,633,428,100);
+  water.addColorStop(0,'#c6ffff');water.addColorStop(.4,'#70d6ed');water.addColorStop(.8,'#348db1');water.addColorStop(1,'#235c80');
+  b.fillStyle=water;b.beginPath();b.ellipse(633,428,88,47,0,0,Math.PI*2);b.fill();
+  for(let i=0;i<32;i++){
+   const a=i*2.399,rr=14+(i*19)%77;
+   oval(633+Math.cos(a)*rr,428+Math.sin(a)*rr*.5,2+i%4,1.2,'#e5ffffa0');
+  }
+  b.strokeStyle='#fff7e6';b.lineWidth=7;b.beginPath();b.ellipse(633,432,105,61,0,0,Math.PI*2);b.stroke();
+  b.strokeStyle='#827d75';b.lineWidth=3;b.beginPath();b.ellipse(633,436,111,65,0,0,Math.PI*2);b.stroke();
+  b.restore();
+  // Soft daylight and warm bounce lighting across the entire square.
+  const sunlight=b.createLinearGradient(0,0,960,600);
+  sunlight.addColorStop(0,'#fff8dd25');sunlight.addColorStop(.4,'#ffffff05');sunlight.addColorStop(1,'#ffdc9e16');
+  b.fillStyle=sunlight;b.fillRect(0,0,960,600);
+  b.restore();
+
   townBackdrop=c;
  }
  g.drawImage(townBackdrop,0,0);
