@@ -17,8 +17,18 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 #hp,#exp{height:100%;background:#e94f60;width:100%}
 #exp{background:#55bafa}
 #msg{position:absolute;bottom:12px;left:10px;right:10px;background:#142338df;padding:12px;border-radius:8px;pointer-events:none}
-#controls{text-align:center;padding:12px}
-#controls button{min-width:55px;margin:3px;touch-action:none}
+#controls{position:absolute;inset:0;pointer-events:none;z-index:5}
+#controls button{pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;background:#e6c47cdd;border:2px solid #7b562a;min-width:44px;min-height:42px;padding:5px;font-size:15px}
+#dpad{position:absolute;bottom:64px;left:12px;display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(2,44px);gap:3px}
+#dpad [data-key="ArrowUp"]{grid-column:2;grid-row:1}
+#dpad [data-key="ArrowLeft"]{grid-column:1;grid-row:2}
+#dpad [data-key="ArrowDown"]{grid-column:2;grid-row:2}
+#dpad [data-key="ArrowRight"]{grid-column:3;grid-row:2}
+#actions{position:absolute;right:12px;bottom:76px;display:flex;gap:6px;align-items:end}
+#saveBtn{position:absolute;top:10px;right:10px}
+#msg{bottom:5px;left:165px;right:165px;padding:7px;font-size:12px;min-height:37px}
+@media(max-width:600px){#controls button{min-width:34px;min-height:33px;padding:3px;font-size:12px}#dpad{left:5px;bottom:42px;grid-template-columns:repeat(3,35px);grid-template-rows:repeat(2,34px);gap:2px}#actions{right:5px;bottom:47px;gap:3px}#hud{top:5px;left:5px;padding:5px;font-size:10px}.bar{width:100px;height:8px}#saveBtn{top:5px;right:5px}#msg{left:116px;right:111px;bottom:3px;font-size:9px;padding:3px;min-height:24px}}
+
 #shop{position:absolute;inset:0;background:#081522c9;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
 #shop.open{display:flex}
 #shopPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:20px;max-width:430px;width:100%;box-shadow:0 12px 40px #0009}
@@ -30,9 +40,8 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v16</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v17</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
-<button onclick="save()">บันทึกเกม</button>
 </header>
 <div id="game">
 <canvas id="c" width="960" height="600"></canvas>
@@ -46,15 +55,15 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </div>
 <div id="shop"><div id="shopPanel"><h2>⚔ ร้านขายอาวุธ</h2><p id="shopBalance"></p><div class="shopItem"><span>🗡️ ดาบทอง<br><small>1,500 Zeny · ระยะโจมตี 105</small></span><button onclick="buySword('gold')">ซื้อ / สวมใส่</button></div><div class="shopItem"><span>💎 ดาบเพชร<br><small>5,000 Zeny · ระยะโจมตี 145</small></span><button onclick="buySword('diamond')">ซื้อ / สวมใส่</button></div><p id="shopNotice"></p><button onclick="closeShop()">ปิดร้านค้า ✕</button></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
-</div>
 <div id="controls">
-<div><button data-key="ArrowUp">▲</button></div>
-<div>
+<button id="saveBtn" onclick="save()">💾 บันทึก</button>
+<div id="dpad">
+<button data-key="ArrowUp">▲</button>
 <button data-key="ArrowLeft">◀</button>
 <button data-key="ArrowDown">▼</button>
 <button data-key="ArrowRight">▶</button>
-<button onclick="attack()">⚔ โจมตี</button>
-<button onclick="interact()">💬 คุย</button>
+</div>
+<div id="actions"><button onclick="attack()">⚔ โจมตี</button><button onclick="interact()">💬 คุย</button></div>
 </div>
 </div>
 <script>
