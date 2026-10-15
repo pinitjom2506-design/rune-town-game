@@ -44,7 +44,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 #inventorySlots{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
 .invSlot{background:#182b3e;border:2px solid #637b8a;min-height:64px;padding:6px;text-align:center;font-size:12px;border-radius:5px}
 .invSlot.equipped{border-color:#ffe47b}
-#skillBtn:disabled{opacity:.55;filter:grayscale(1)}
+#skillBtn{display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;min-height:42px;background:#28405cdd;border:2px solid #89b9e3;border-radius:7px;color:#fff;font-weight:bold;font-size:13px;user-select:none;pointer-events:none}#skillBtn.locked{opacity:.55}
 #questMenu{position:absolute;inset:0;background:#081522d9;display:none;align-items:center;justify-content:center;z-index:12;padding:16px}
 #questMenu.open{display:flex}
 #questPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:20px;max-width:440px;width:100%}
@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v35</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v36</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -106,7 +106,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <button data-key="ArrowDown">▼</button>
 <button data-key="ArrowRight">▶</button>
 </div>
-<div id="actions"><button id="skillBtn" onclick="useSkill()">🌊 C สกิล</button><button onclick="attack()">⚔ โจมตี</button><button onclick="interact()">💬 คุย</button><button onclick="toggleInventory()">🎒 I</button></div>
+<div id="actions"><span id="skillBtn" aria-label="ใช้สกิลโดยกดปุ่ม C">🌊 C สกิล</span><button onclick="attack()">⚔ โจมตี</button><button onclick="interact()">💬 คุย</button><button onclick="toggleInventory()">🎒 I</button></div>
 </div>
 </div>
 <script>
@@ -114,10 +114,10 @@ const canvas=document.getElementById('c'),g=canvas.getContext('2d');
 g.imageSmoothingEnabled=false;
 
 const $=id=>document.getElementById(id);
-const defaultBindings={up:'w',down:'s',left:'a',right:'d',attack:' ',talk:'e',skill:'c',inventory:'i'};
-const actionLabels={up:'เดินขึ้น',down:'เดินลง',left:'เดินซ้าย',right:'เดินขวา',attack:'โจมตี',talk:'พูดคุย',skill:'สกิล',inventory:'ช่องเก็บของ'};
+const defaultBindings={up:'w',down:'s',left:'a',right:'d',attack:' ',talk:'e',inventory:'i'};
+const actionLabels={up:'เดินขึ้น',down:'เดินลง',left:'เดินซ้าย',right:'เดินขวา',attack:'โจมตี',talk:'พูดคุย',inventory:'ช่องเก็บของ'};
 let bindings={...defaultBindings};
-try{const stored=JSON.parse(localStorage.getItem('rune-keys'));if(stored&&typeof stored==='object')for(const a of Object.keys(defaultBindings))if(typeof stored[a]==='string')bindings[a]=stored[a]}catch(e){}
+try{const stored=JSON.parse(localStorage.getItem('rune-keys'));if(stored&&typeof stored==='object')for(const a of Object.keys(defaultBindings))if(typeof stored[a]==='string'&&stored[a]!=='c')bindings[a]=stored[a]}catch(e){}
 let menuActive=true,waitingKey=null;
 function startGame(){menuActive=false;$('mainMenu').style.display='none';keys={};updateTutorial();say(p.tutorialStage===3?'🎉 บทสอนเล่นเสร็จสมบูรณ์แล้ว!':'📖 เริ่มบทสอนเล่น! ทำตามคำแนะนำบนหน้าจอ')}
 function showKeySettings(){$('menuHome').style.display='none';$('keySettings').classList.add('open');renderKeySettings()}
@@ -244,7 +244,7 @@ $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ${swords[p.weapon]?.name||
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
-$('skillBtn').disabled=p.lv<2||!['normal','gold','diamond'].includes(p.weapon);
+$('skillBtn').classList.toggle('locked',p.lv<2||!['normal','gold','diamond'].includes(p.weapon));
 $('skillBtn').textContent=p.weapon==='diamond'?'💎 C ฟันไขว้':p.weapon==='gold'?'✨ C พายุทอง':'🌊 C สกิล';
 $('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':p.weapon==='diamond'?'กด C: ฟันไขว้เพชร 2 ครั้ง (คูลดาวน์ 7 วินาที)':p.weapon==='gold'?'กด C: พายุคมดาบทอง ฟันรัวรอบตัว (คูลดาวน์ 8 วินาที)':p.weapon!=='normal'?'สกิลยังไม่พร้อมสำหรับดาบนี้':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
 $('quest').textContent=p.activeQuest===1?`เควส 1: Poring ${Math.min(5,p.kills)}/5`:p.activeQuest===2?`เควส 2: กระต่าย ${Math.min(3,p.rabbitKills)}/3`:'เควส: คุยกับ NPC เพื่อเลือกเควส';
@@ -468,7 +468,7 @@ document.addEventListener('keydown',e=>{
    e.preventDefault();
    if(key==='escape'){waitingKey=null;$('keyHint').textContent='ยกเลิกการเปลี่ยนปุ่ม';renderKeySettings();return}
    if(['shift','control','alt','meta','tab'].includes(key))return;
-   for(const a of Object.keys(bindings))if(a!==waitingKey&&bindings[a]===key){$('keyHint').textContent='ปุ่มนี้ถูกใช้แล้ว กรุณาเลือกปุ่มอื่น';return}
+   for(const a of Object.keys(bindings))if(key==='c'||(a!==waitingKey&&bindings[a]===key)){$('keyHint').textContent='ปุ่มนี้ถูกใช้แล้ว กรุณาเลือกปุ่มอื่น';return}
    bindings[waitingKey]=key;waitingKey=null;localStorage.setItem('rune-keys',JSON.stringify(bindings));
    $('keyHint').textContent='บันทึกปุ่มควบคุมแล้ว';renderKeySettings();
   }
@@ -480,7 +480,7 @@ document.addEventListener('keydown',e=>{
  if(e.repeat)return;
  if(isActionKey('attack',key))attack();
  if(isActionKey('talk',key)||key==='e')interact();
- if(isActionKey('skill',key))useSkill();
+ if(key==='c')useSkill();
  if(isActionKey('inventory',key))toggleInventory();
 });
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
