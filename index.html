@@ -54,11 +54,20 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 .shopItem button{white-space:nowrap}
 #shopNotice{min-height:22px;color:#ffdd8c}
 
+#mainMenu{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:linear-gradient(155deg,#102e39ed,#102020f5);padding:14px;text-align:center}
+#menuPanel{width:min(460px,100%);padding:28px 20px;border:4px solid #d9b86c;background:#20394af5;box-shadow:0 14px 40px #000b;border-radius:10px;max-height:95%;overflow:auto}
+#menuPanel h1{font-size:clamp(28px,6vw,55px);color:#ffe49c;letter-spacing:3px;text-shadow:3px 4px #68462e;margin:8px 0}
+#menuPanel p{color:#d4e7db;font-size:13px}
+.menuButton{display:block;width:100%;margin:12px 0;font-size:18px;padding:13px}
+#keySettings{display:none;text-align:left}#keySettings.open{display:block}
+.keyRow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #5c7783;font-size:13px}
+.keyRow button{min-width:110px}#keyHint{color:#ffe49c;min-height:25px}
+@media(max-width:600px){#menuPanel{padding:12px}#menuPanel h1{margin:3px 0}#menuPanel p{margin:4px 0}.menuButton{margin:6px 0;padding:7px}}
 </style>
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v28</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v29</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -75,6 +84,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <div id="questMenu"><div id="questPanel"><h2>📜 เลือกเควส</h2><p id="questStatus">เลือกเควสที่ต้องการทำ</p><button onclick="chooseQuest(1)">เควส 1: กำจัด Poring 5/5</button><button onclick="chooseQuest(2)">เควส 2: กำจัดกระต่ายธาตุพืช 3/3</button><button onclick="closeQuestMenu()">ปิด ✕</button></div></div>
 <div id="inventory"><div id="inventoryPanel"><h2>🎒 ช่องเก็บของ</h2><p id="inventoryInfo"></p><div id="inventorySlots"></div><button onclick="closeInventory()">ปิดช่องเก็บของ ✕</button></div></div>
 <div id="saveMenu"><div id="savePanel"><h2>💾 บันทึก / โหลดเกม</h2><p>เลือกช่องเซฟเพื่อบันทึกหรือกลับมาเล่นจากจุดเดิม</p><div id="saveSlots"></div><p id="saveNotice"></p><button onclick="closeSaveMenu()">ปิด ✕</button></div></div>
+<div id="mainMenu"><div id="menuPanel"><h1>⚔ RUNE TOWN</h1><p>PIXEL ART RPG · ผจญภัยในโลกแฟนตาซี</p><div id="menuHome"><button class="menuButton" onclick="startGame()">▶ เล่นเกม</button><button class="menuButton" onclick="showKeySettings()">⚙ ตั้งค่าปุ่มควบคุม</button><p>เลือกเล่นเพื่อเข้าสู่เกมหลัก</p></div><div id="keySettings"><h3>⌨ ตั้งค่าปุ่มควบคุม</h3><div id="keyRows"></div><p id="keyHint">แตะปุ่มที่ต้องการเปลี่ยน แล้วกดปุ่มใหม่บนคีย์บอร์ด</p><button onclick="resetKeySettings()">คืนค่าปุ่มเริ่มต้น</button><button onclick="hideKeySettings()">← กลับเมนู</button></div></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
 <div id="controls">
 <button id="saveBtn" onclick="openSaveMenu()">💾 บันทึก</button>
@@ -93,6 +103,28 @@ const canvas=document.getElementById('c'),g=canvas.getContext('2d');
 g.imageSmoothingEnabled=false;
 
 const $=id=>document.getElementById(id);
+const defaultBindings={up:'w',down:'s',left:'a',right:'d',attack:' ',talk:'e',skill:'c',inventory:'i'};
+const actionLabels={up:'เดินขึ้น',down:'เดินลง',left:'เดินซ้าย',right:'เดินขวา',attack:'โจมตี',talk:'พูดคุย',skill:'สกิล',inventory:'ช่องเก็บของ'};
+let bindings={...defaultBindings};
+try{const stored=JSON.parse(localStorage.getItem('rune-keys'));if(stored&&typeof stored==='object')for(const a of Object.keys(defaultBindings))if(typeof stored[a]==='string')bindings[a]=stored[a]}catch(e){}
+let menuActive=true,waitingKey=null;
+function startGame(){menuActive=false;$('mainMenu').style.display='none';keys={};say('ยินดีต้อนรับสู่ Rune Town!')}
+function showKeySettings(){$('menuHome').style.display='none';$('keySettings').classList.add('open');renderKeySettings()}
+function hideKeySettings(){waitingKey=null;$('keySettings').classList.remove('open');$('menuHome').style.display='block'}
+function keyName(k){return k===' '?'Space':k.startsWith('arrow')?k.replace('arrow','Arrow '):k.toUpperCase()}
+function renderKeySettings(){
+ const root=$('keyRows');root.textContent='';
+ for(const a of Object.keys(defaultBindings)){
+  const row=document.createElement('div');row.className='keyRow';
+  const label=document.createElement('span');label.textContent=actionLabels[a];
+  const btn=document.createElement('button');btn.textContent=waitingKey===a?'กดปุ่ม...':keyName(bindings[a]);
+  btn.onclick=()=>{waitingKey=a;$('keyHint').textContent='กดปุ่มใหม่สำหรับ '+actionLabels[a];renderKeySettings()};
+  row.append(label,btn);root.appendChild(row);
+ }
+}
+function resetKeySettings(){bindings={...defaultBindings};waitingKey=null;localStorage.setItem('rune-keys',JSON.stringify(bindings));$('keyHint').textContent='คืนค่าปุ่มเรียบร้อย';renderKeySettings()}
+function isActionKey(action,key){return bindings[action]===key}
+
 let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0,weapon:'normal',owned:['normal']};
 let bootSave=null;try{bootSave=JSON.parse(localStorage.getItem('rune-save'))}catch(e){}
 if(bootSave)Object.assign(p,bootSave);
@@ -290,17 +322,28 @@ function useSkill(){
  updateHUD();
 }
 document.addEventListener('keydown',e=>{
-const key=e.key.toLowerCase();
-if($('saveMenu').classList.contains('open')){if(key==='escape')closeSaveMenu();return}
-keys[key]=true;
-if(['arrowup','arrowdown','arrowleft','arrowright',' ','e','c','i'].includes(key))e.preventDefault();
-if(e.repeat)return;
-if(key===' ')attack();
-if(key==='e'||e.code==='KeyE')interact();
-if(key==='c'||e.code==='KeyC')useSkill();
-if(key==='i'||e.code==='KeyI')toggleInventory();
+ const key=e.key.toLowerCase();
+ if(menuActive){
+  if(waitingKey){
+   e.preventDefault();
+   if(key==='escape'){waitingKey=null;$('keyHint').textContent='ยกเลิกการเปลี่ยนปุ่ม';renderKeySettings();return}
+   if(['shift','control','alt','meta','tab'].includes(key))return;
+   for(const a of Object.keys(bindings))if(a!==waitingKey&&bindings[a]===key){$('keyHint').textContent='ปุ่มนี้ถูกใช้แล้ว กรุณาเลือกปุ่มอื่น';return}
+   bindings[waitingKey]=key;waitingKey=null;localStorage.setItem('rune-keys',JSON.stringify(bindings));
+   $('keyHint').textContent='บันทึกปุ่มควบคุมแล้ว';renderKeySettings();
+  }
+  return;
+ }
+ if($('saveMenu').classList.contains('open')){if(key==='escape')closeSaveMenu();return}
+ keys[key]=true;
+ if(['arrowup','arrowdown','arrowleft','arrowright',' ',...Object.values(bindings)].includes(key))e.preventDefault();
+ if(e.repeat)return;
+ if(isActionKey('attack',key))attack();
+ if(isActionKey('talk',key))interact();
+ if(isActionKey('skill',key))useSkill();
+ if(isActionKey('inventory',key))toggleInventory();
 });
-document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
 document.querySelectorAll('[data-key]').forEach(b=>{
 let k=b.dataset.key.toLowerCase();
 b.onpointerdown=e=>{e.preventDefault();keys[k]=true;b.setPointerCapture(e.pointerId)};
@@ -450,9 +493,9 @@ g.lineTo(x+w+18,y);g.fill();
 function draw(){
 tick++;
 g.imageSmoothingEnabled=false;
-let dx=(keys['arrowright']||keys['d']?1:0)-(keys['arrowleft']||keys['a']?1:0);
-let dy=(keys['arrowdown']||keys['s']?1:0)-(keys['arrowup']||keys['w']?1:0);
-if((dx||dy)&&!dead){
+let dx=(keys['arrowright']||keys[bindings.right]?1:0)-(keys['arrowleft']||keys[bindings.left]?1:0);
+let dy=(keys['arrowdown']||keys[bindings.down]?1:0)-(keys['arrowup']||keys[bindings.up]?1:0);
+if((dx||dy)&&!dead&&!menuActive){
 const mag=Math.hypot(dx,dy);facing={x:dx/mag,y:dy/mag};
 let speed=2.7/Math.hypot(dx,dy);
 p.x=Math.max(25,Math.min(935,p.x+dx*speed));
