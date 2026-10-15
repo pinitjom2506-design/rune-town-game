@@ -7,12 +7,12 @@
 <title>Rune Town RPG</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#172332;color:white;font-family:Tahoma,Arial}
+body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
 header{padding:12px;background:#263b58;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
 button{background:#e6c47c;border:2px solid #7b562a;border-radius:7px;padding:9px;cursor:pointer;font-weight:bold}
 #game{position:relative;margin:auto;max-width:960px}
 canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rendering:pixelated;image-rendering:crisp-edges}
-#hud{position:absolute;top:10px;left:10px;background:#142338d9;padding:12px;border-radius:9px;font-size:13px}
+#hud{position:absolute;top:10px;left:10px;background:linear-gradient(#f8fbffed,#d9e9f7ed);padding:12px;border:2px solid #6998c5;border-radius:5px;font-size:13px;color:#20354b;box-shadow:0 3px 8px #0006}
 .bar{width:150px;height:12px;background:#555;margin:5px 0;border-radius:8px;overflow:hidden}
 #hp,#exp{height:100%;background:#e94f60;width:100%}
 #exp{background:#55bafa}
@@ -27,7 +27,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 #actions{position:absolute;right:12px;bottom:76px;display:flex;gap:6px;align-items:end}
 #saveBtn{position:absolute;top:10px;right:10px}
 #resetBtn{position:absolute;top:58px;right:10px;background:#e99788dd;border-color:#8c3535}
-#msg{bottom:5px;left:165px;right:165px;padding:7px;font-size:12px;min-height:37px}
+#msg{bottom:5px;left:165px;right:165px;padding:7px;font-size:12px;min-height:37px;border:1px solid #8398ad;background:#0b172bdc;color:#ffe993}
 @media(max-width:600px){#controls button{min-width:34px;min-height:33px;padding:3px;font-size:12px}#dpad{left:5px;bottom:42px;grid-template-columns:repeat(3,35px);grid-template-rows:repeat(2,34px);gap:2px}#actions{right:5px;bottom:47px;gap:3px}#hud{top:5px;left:5px;padding:5px;font-size:10px}.bar{width:100px;height:8px}#saveBtn{top:5px;right:5px}#resetBtn{top:43px;right:5px}#msg{left:116px;right:111px;bottom:3px;font-size:9px;padding:3px;min-height:24px}}
 
 #shop{position:absolute;inset:0;background:#081522c9;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v38</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v39</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -632,6 +632,79 @@ g.fillStyle=roof;g.beginPath();
 g.moveTo(x-18,y);g.lineTo(x+w/2,y-72);
 g.lineTo(x+w+18,y);g.fill();
 }
+
+let townBackdrop=null;
+function drawTownBackdrop(){
+ if(!townBackdrop){
+  const c=document.createElement('canvas');c.width=960;c.height=600;
+  const b=c.getContext('2d');b.imageSmoothingEnabled=false;
+  const rng=(n)=>{let v=Math.sin(n*127.1+48.7)*43758.5453;return v-Math.floor(v)};
+  const fill=(x,y,w,h,color)=>{b.fillStyle=color;b.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))};
+  const poly=(pts,color)=>{b.fillStyle=color;b.beginPath();b.moveTo(...pts[0]);for(let i=1;i<pts.length;i++)b.lineTo(...pts[i]);b.closePath();b.fill()};
+  const oval=(x,y,rx,ry,color)=>{b.fillStyle=color;b.beginPath();b.ellipse(x,y,rx,ry,0,0,Math.PI*2);b.fill()};
+  const grad=b.createLinearGradient(0,0,0,600);grad.addColorStop(0,'#87c8f1');grad.addColorStop(.27,'#e4e9d4');grad.addColorStop(1,'#c7b99e');b.fillStyle=grad;b.fillRect(0,0,960,600);
+  // Fine stone paving, warm highlights and irregular grout.
+  for(let y=158;y<610;y+=14)for(let x=-30;x<990;x+=32){
+   const offset=Math.floor(y/14)%2*16,xx=x+offset,noise=rng(x*3+y);
+   fill(xx,y,31,13,['#e8dfc8','#f2e9d4','#d9d0b9','#e1d6bd'][Math.floor(noise*4)]);
+   fill(xx+2,y+2,26,1,'#ffffff45');
+   fill(xx+noise*12,y+10,6,2,'#c2b69d');
+  }
+  // Distant castle and medieval town walls.
+  for(let x=0;x<960;x+=27){fill(x,38,26,137,x%3?'#c4b6a0':'#ded2b8');fill(x+2,38,24,2,'#f6e8d1')}
+  for(let y=40;y<175;y+=18)for(let x=(Math.floor(y/18)%2)*14;x<960;x+=29){fill(x,y,27,1,'#a49584');fill(x+1,y+1,1,15,'#b5a692')}
+  for(let x=0;x<960;x+=50){fill(x,19,36,24,'#c4b7a6');fill(x+3,22,30,19,'#e0d4c0')}
+  for(const x of [255,610]){fill(x,0,92,181,'#b6aa99');fill(x+6,0,79,174,'#d9cebb');for(let y=16;y<171;y+=20){fill(x+8,y,75,2,'#ad9e8a');for(let j=0;j<4;j++)fill(x+10+j*20+(y%3)*4,y+2,1,17,'#b3a591')}for(let i=0;i<5;i++)fill(x+i*19,0,13,15,'#d8cbb6');fill(x+37,34,18,42,'#625b57');fill(x+40,37,12,37,'#252f3a')}
+  fill(368,42,226,149,'#b8aa97');fill(377,50,207,136,'#e2d3b9');
+  oval(480,164,99,102,'#655f58');oval(480,166,83,87,'#354d5c');
+  fill(397,166,166,25,'#354d5c');
+  // Castle skyline glimpsed through gate.
+  fill(459,101,41,74,'#8e9da3');poly([[451,103],[480,60],[508,103]],'#7c8c9a');fill(471,91,18,15,'#516a7c');
+  for(let i=0;i<8;i++)fill(401+i*21,166,12,16,'#82949c');
+  fill(464,32,32,43,'#b9b5a9');poly([[460,34],[480,8],[500,34]],'#a68a64');
+  poly([[445,59],[480,47],[515,59],[509,109],[480,121],[451,109]],'#365879');
+  poly([[452,64],[480,54],[508,64],[504,103],[480,113],[456,103]],'#bc944c');
+  poly([[459,67],[480,60],[501,67],[497,99],[480,107],[463,99]],'#244b75');
+  fill(477,65,6,36,'#e2c271');fill(464,79,32,5,'#e2c271');
+  // Timber houses and striped market stalls.
+  function house(x,y,w,h,roof){
+   fill(x,y,w,h,'#e3c7a1');fill(x+5,y+6,w-10,h-12,'#f2dbb6');
+   for(let k=0;k<4;k++)fill(x+k*w/3.4,y,7,h,'#8c6043');
+   for(let yy=y+20;yy<y+h;yy+=36)fill(x,yy,w,6,'#916c4c');
+   poly([[x-23,y+8],[x+w/2,y-56],[x+w+22,y+8]],roof);
+   for(let i=0;i<Math.floor(w/17);i++)fill(x+i*17,y-5,16,5,'#b77b56');
+   for(let k=0;k<3;k++){fill(x+25+k*53,y+35,23,36,'#6d5d53');fill(x+28+k*53,y+38,17,28,'#9fc5c3');fill(x+36+k*53,y+37,3,30,'#eee2c8')}
+  }
+  house(-25,183,246,260,'#a65c42');house(755,175,245,265,'#a76244');
+  house(-10,52,208,112,'#8f533b');house(786,46,206,122,'#96583e');
+  function stall(x,y){fill(x+9,y+27,10,92,'#704b32');fill(x+155,y+27,10,92,'#704b32');fill(x,y,174,34,'#f1f1dd');for(let i=0;i<9;i++)fill(x+i*20,y,11,34,'#4e93c7');poly([[x-7,y],[x+82,y-42],[x+183,y]],'#f3e6cb');for(let i=0;i<7;i++){fill(x+15+i*21,y+51,14,11,['#bc774a','#f1cb73','#a35b4c'][i%3]);fill(x+12+i*21,y+64,16,8,'#7a513c')}}
+  stall(36,332);stall(773,398);
+  // Trees with layered foliage.
+  function tree(x,y,size){fill(x-7,y-size*.25,14,size*.75,'#745338');for(let i=0;i<27;i++){const a=i*2.4,r=size*(.15+rng(i+x)*.44),xx=x+Math.cos(a)*r,yy=y-size*.58+Math.sin(a)*r*.7;oval(xx,yy,size*.17,size*.13,['#3d8650','#4b9d53','#79b85d','#9ac765'][i%4])}for(let i=0;i<8;i++)oval(x+(rng(i*7+x)-.5)*size,y-size*.7+(rng(i*9+y)-.5)*size*.4,3,2,'#d8e994')}
+  tree(230,185,113);tree(720,184,130);tree(45,558,125);tree(885,573,136);
+  // Iron lampposts and hanging royal banners.
+  function lamp(x,y){fill(x-3,y-78,7,80,'#303f43');fill(x-8,y-81,17,5,'#242d37');poly([[x-9,y-81],[x-6,y-99],[x+6,y-99],[x+9,y-81]],'#344653');fill(x-4,y-96,8,14,'#ffe2a0');fill(x-2,y-95,3,12,'#fff6d0');fill(x-9,y-101,18,4,'#283642')}
+  function banner(x,y){fill(x-3,y-12,6,84,'#463c39');fill(x-22,y,44,5,'#a67e4b');poly([[x-17,y+5],[x+17,y+5],[x+17,y+66],[x,y+56],[x-17,y+66]],'#214b82');fill(x-11,y+13,22,3,'#e6c17b');fill(x-2,y+22,4,25,'#e6c17b');fill(x-9,y+32,18,4,'#e6c17b')}
+  for(const pos of [[328,270],[651,270],[287,477],[739,478]])lamp(...pos);
+  banner(327,130);banner(649,133);banner(735,339);
+  // Flowerbeds, decorative fence and a marble angel fountain.
+  for(const [x,y] of [[594,440],[706,433],[551,508],[745,511]]){
+   oval(x,y,63,31,'#356a43');
+   for(let i=0;i<38;i++){const a=i*2.4,r=8+rng(i*5+x)*56,xx=x+Math.cos(a)*r,yy=y+Math.sin(a)*r*.47;oval(xx,yy,5,4,i%4?'#f8f4d8':'#e8a7aa');oval(xx,yy,2,2,'#f2ca56')}
+  }
+  oval(633,438,112,66,'#8d9290');oval(633,430,105,61,'#d7d4c5');oval(633,424,94,51,'#4e8fa9');oval(633,424,83,43,'#79cbdc');
+  for(let i=0;i<16;i++){const a=i*Math.PI/8;oval(633+Math.cos(a)*86,425+Math.sin(a)*42,7,4,'#b8f4f3')}
+  fill(622,370,22,53,'#b9b8b1');oval(633,368,25,10,'#c8c5bd');oval(633,333,13,16,'#e1dfd6');poly([[626,352],[602,331],[606,373],[627,383]],'#d1d1ca');poly([[641,352],[661,330],[658,374],[639,382]],'#d1d1ca');fill(628,351,10,31,'#dad8d0');
+  for(let i=0;i<17;i++){const a=i*Math.PI*2/17;oval(633+Math.cos(a)*65,413+Math.sin(a)*33,2,2,'#e7ffff')}
+  for(let i=0;i<10;i++){const x=517+i*24;fill(x,473,4,32,'#34433e');fill(x-2,472,8,5,'#24342f')}
+  fill(522,481,214,3,'#283a36');fill(522,495,214,3,'#283a36');
+  // Ambient pedestrians as distant decorative sprites (real NPCs remain interactive).
+  for(let i=0;i<19;i++){const x=205+(i*137)%555,y=240+(i*83)%246;if(Math.hypot(x-633,y-430)<125)continue;oval(x,y+2,11,4,'#403c3850');oval(x,y-26,8,9,['#f4c6a5','#dfaa90','#efc1aa'][i%3]);fill(x-8,y-18,16,19,['#a96758','#5c78a0','#7c6559','#b98a63'][i%4]);fill(x-7,y,5,8,'#70584c');fill(x+2,y,5,8,'#70584c');fill(x-9,y-31,18,5,['#8e5142','#725043','#bd8e55'][i%3])}
+  townBackdrop=c;
+ }
+ g.drawImage(townBackdrop,0,0);
+}
+
 function draw(){
 tick++;
 g.imageSmoothingEnabled=false;
@@ -663,42 +736,11 @@ mobs.forEach(m=>{
    say((m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+' โจมตีคุณ! -'+damage+' HP');
    if(p.hp<=0){
      dead=true;
-     say('คุณหมดสติ! กดปุ่ม 💬 คุย หรือ E เพื่อฟื้นคืนชีพ');
+     say('คุณหมดสติ! กด E เพื่อฟื้นคืนชีพ');
    }
  }
 });
-rect(0,0,960,600,'#8fbd7a');
-rect(0,145,960,455,'#d6c5a3');
-for(let y=152;y<600;y+=32){
-for(let x=(Math.floor(y/32)%2)*23;x<960;x+=46){
-g.strokeStyle='#b8a88b';g.lineWidth=1;
-g.strokeRect(x,y,45,30)
-}}
-rect(0,0,960,150,'#9e9b91');
-for(let x=0;x<960;x+=70){
-rect(x,0,58,35,'#bdb7aa');
-rect(x,65,58,85,'#afa89a')
-}
-rect(375,45,210,140,'#5b5960');
-rect(394,65,172,120,'#c7b9a1');
-rect(417,90,126,95,'#534c4b');
-text('RUNE TOWN',480,43,'#ffe7a1',24);
-building(10,210,195,180,'#935d42');
-building(755,195,195,185,'#89553c');
-building(30,10,190,110,'#76503d');
-building(735,15,195,110,'#76503d');
-for(let i=0;i<20;i++){
-let x=(i*179+31)%950,y=(i*113+210)%590;
-if(x>240&&x<710&&y>230)continue;
-ellipse(x,y,28,18,'#4f9150');
-ellipse(x-8,y-8,23,17,'#69a85b')
-}
-ellipse(600,425,88,48,'#999d94');
-ellipse(600,418,73,38,'#65c5e4');
-ellipse(600,418,48,24,'#b1e9f1');
-rect(593,350,14,65,'#c8c7c0');
-ellipse(600,345,20,16,'#e2dfd3');
-text('น้ำพุเมือง',600,485,'#fff',13);
+drawTownBackdrop();
 npcs.forEach(drawNPC);
 mobs.forEach(m=>{
 if(!m.alive){
@@ -753,7 +795,7 @@ if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
 damageTexts=damageTexts.filter(d=>d.life>0);
 damageTexts.forEach(d=>{d.y-=0.8;d.life--;text('-'+d.value,d.x,d.y,'#ffdf4b',20)});
 drawTutorialGuide();
-if(dead){rect(260,260,440,76,'#15151ddd');text('คุณหมดสติ!',480,291,'#ff7788',28);text('กด คุย หรือ E เพื่อฟื้นคืนชีพ',480,321,'#ffffff',17)}
+if(dead){rect(260,260,440,76,'#15151ddd');text('คุณหมดสติ!',480,291,'#ff7788',28);text('กด E เพื่อฟื้นคืนชีพ',480,321,'#ffffff',17)}
 if(hit>0)hit--;
 if(slash&&slash.life>0){
  slash.x+=slash.dx*8;
