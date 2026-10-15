@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v48 — Top-Down 3D</title>
+<title>Rune Town v49 — Optimized 3D</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — TOP-DOWN 3D v48</strong>
+<strong>⚔️ RUNE TOWN — OPTIMIZED 3D v49</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game"><div id="renderMode" style="position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:6;background:#16283bdc;color:#fff4cc;padding:4px 9px;border:1px solid #ffe09c;border-radius:6px;font:12px Tahoma,Arial;pointer-events:none">กำลังโหลดฉาก 3D...</div>
@@ -746,7 +746,7 @@ g.lineTo(x+w+18,y);g.fill();
 }
 
 
-let scene3D=null, renderer3D=null, camera3D=null, water3D=null;
+let scene3D=null, renderer3D=null, camera3D=null, water3D=null,town3DRendered=false;
 function initTown3D(){
  if(!window.THREE||scene3D)return;
  try{
@@ -754,25 +754,32 @@ function initTown3D(){
  const camera=new T.OrthographicCamera(-24,24,15,-15,.1,200);
  camera.position.set(0,35,25);camera.lookAt(0,0,0);
  const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setSize(960,600,false);renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
- renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+ renderer.setSize(960,600,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.72;
+ renderer.shadowMap.enabled=false;
  renderer.outputColorSpace=T.SRGBColorSpace;
- scene.add(new T.HemisphereLight(0xe8f5ff,0x987c56,2.0));
- const sun=new T.DirectionalLight(0xfff1cf,3.0);sun.position.set(-13,32,16);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+ scene.add(new T.HemisphereLight(0xddeeff,0x786c59,.68));
+ const sun=new T.DirectionalLight(0xffe7c1,1.15);sun.position.set(-13,32,16);sun.castShadow=false;sun.shadow.mapSize.set(512,512);
  sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;sun.shadow.bias=-.0004;scene.add(sun);
  const mat=(color,roughness=1,metalness=0)=>new T.MeshStandardMaterial({color,roughness,metalness});
  const stone=mat(0xc6b9a2),stoneLight=mat(0xe3d7bd),stoneDark=mat(0x827b70),wood=mat(0x74513c),plaster=mat(0xe9d5b1),roof=mat(0xa34e35),roofLight=mat(0xd87951),blue=mat(0x2d5c9a),gold=mat(0xe9bc55,.42,.6),leaf=mat(0x4f9d55),leafLight=mat(0x8cbd67),water=mat(0x3cbedc,.18,.25);
  const rand=(n)=>{const a=Math.sin(n*127.1+78.3)*43758.5453;return a-Math.floor(a)};
- const add=(geometry,material,x,y,z,cast=true)=>{const mesh=new T.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=cast;mesh.receiveShadow=true;scene.add(mesh);return mesh};
+ const add=(geometry,material,x,y,z,cast=true)=>{const mesh=new T.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=false;mesh.receiveShadow=false;scene.add(mesh);return mesh};
  const cube=(x,y,z,w,h,d,m)=>add(new T.BoxGeometry(w,h,d),m,x,y,z);
  const cylinder=(x,y,z,r1,r2,h,m,segments=18)=>add(new T.CylinderGeometry(r1,r2,h,segments),m,x,y,z);
  const ground=cube(0,-.3,0,51,.6,34,mat(0xc7b99d));
  // Individual perspective-correct cobbles with varied height and color.
  const paving=[mat(0xe8ddc8),mat(0xd3c5ad),mat(0xf0e5cf),mat(0xb8ab95)];
+ // Batch all 3,626 cobblestones into four instanced meshes (4 draw calls).
+ const geoPave=new T.BoxGeometry(.65,.05,.64),temp=new T.Object3D();
+ const tiles=[[],[],[],[]];
  for(let row=0;row<49;row++)for(let col=0;col<74;col++){
   const x=(col-37)*.69+(row%2)*.34,z=(row-24)*.69,n=rand(row*113+col*17);
-  const tile=cube(x,.012+n*.035,z,.65,.05,.64,paving[Math.floor(n*4)]);
-  tile.castShadow=false;
+  tiles[Math.floor(n*4)].push([x,.012+n*.035,z]);
+ }
+ for(let k=0;k<4;k++){
+  const mesh=new T.InstancedMesh(geoPave,paving[k],tiles[k].length);
+  tiles[k].forEach((p,i)=>{temp.position.set(...p);temp.updateMatrix();mesh.setMatrixAt(i,temp.matrix)});
+  mesh.instanceMatrix.needsUpdate=true;mesh.frustumCulled=false;scene.add(mesh);
  }
  // Stone castle wall and tall towers at back of square.
  cube(0,4.5,-14.8,29,9,2.4,stone);
@@ -859,14 +866,14 @@ function initTown3D(){
   cube(x,5.65,z,1.1,.15,.15,gold);
   cube(x,4.65,z,.16,1.7,.16,gold);
  }
- scene3D=scene;renderer3D=renderer;camera3D=camera;document.getElementById('renderMode').textContent='✓ 3D WebGL';
+ scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ 3D WebGL';
  }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null;document.getElementById('renderMode').textContent='⚠ 2D สำรอง (WebGL ไม่พร้อม)'}
 }
 function drawTown3D(){
  if(!scene3D||!renderer3D){if(tick===1)document.getElementById('renderMode').textContent='⚠ 2D สำรอง (โหลด 3D ไม่สำเร็จ)';drawTownBackdrop();return}
  try{
- if(water3D){water3D.rotation.y=tick*.003;water3D.material.emissive.setHex(0x0a3440);water3D.material.emissiveIntensity=.15+Math.sin(tick*.04)*.08}
- renderer3D.render(scene3D,camera3D);
+ if(water3D&&!town3DRendered){water3D.material.emissive.setHex(0x06303b);water3D.material.emissiveIntensity=.08}
+ if(!town3DRendered){renderer3D.render(scene3D,camera3D);town3DRendered=true}
  g.drawImage(renderer3D.domElement,0,0,960,600);
  }catch(e){console.warn(e);renderer3D=null;drawTownBackdrop()}
 }
