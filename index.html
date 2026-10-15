@@ -30,7 +30,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v15</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v16</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -115,7 +115,7 @@ p.hp=p.max;say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')
 }else if(n.name==='ร้านค้า'){
 openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')
 }else{
-if(p.kills>=5){p.zeny+=200;p.kills=0;say('เควสสำเร็จ! รับ 200 Zeny')}
+if(p.kills>=5){const questExp=500*(p.weapon==='diamond'?4:p.weapon==='gold'?2:1);p.zeny+=200;p.kills=0;if(p.lv<MAX_LEVEL)p.exp+=questExp;while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;say('LEVEL UP! เลเวล '+p.lv)}if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}say('เควสสำเร็จ! รับ 200 Zeny และ '+(p.lv>=MAX_LEVEL?0:questExp)+' EXP')}
 else say('กำจัด Poring ให้ครบ 5 ตัวแล้วกลับมาหาฉัน')
 }
 updateHUD()
