@@ -30,7 +30,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v9</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v10</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -224,6 +224,48 @@ function character(x,y,color,player=false){
  rect(px+60,py+62,3,7,'#d5d8c5');
  text('YOU',x,y-105+bob,'#ffe77e',12);
 }
+
+function drawNPC(n){
+ const x=n.x,y=n.y;
+ const unit=3, ox=Math.round(x-36),oy=Math.round(y-94);
+ const px=(a,b,w,h,c)=>rect(ox+a*unit,oy+b*unit,w*unit,h*unit,c);
+ ellipse(x,y+7,23,7,'#0005');
+ if(n.name==='Kafra'){
+  // Dark steel knight with red cape, shield and sword.
+  for(let j=0;j<12;j++)px(4-j%3,12+j,7+j%3,3,j%2?'#a72236':'#cf3445');
+  knightRows.forEach((line,j)=>{for(let i=0;i<24;i++){const c=knightPalette[line[i]];if(c)px(i,j,1,1,c)}});
+  px(0,16,2,13,'#cbdde7');px(0,14,2,3,'#f3f8fc');px(0,29,4,2,'#c7a25f');
+  px(19,15,7,11,'#182432');px(20,16,5,9,'#758d9b');px(22,18,2,5,'#d2d6da');
+ }else if(n.name==='ร้านค้า'){
+  // Hooded bearded ranger / axe merchant.
+  px(7,11,16,17,'#46362f');px(4,12,5,14,'#283748');px(22,12,5,14,'#283748');
+  px(8,27,6,5,'#342b2c');px(18,27,6,5,'#342b2c');
+  px(8,10,16,5,'#273647');px(6,6,20,9,'#293949');
+  px(9,3,14,8,'#273648');px(11,5,10,9,'#a7785d');
+  px(10,7,12,3,'#1a2735');px(12,10,8,2,'#342a28');
+  px(11,12,10,5,'#4b3029');px(13,11,6,3,'#291f22');
+  px(10,17,12,9,'#70503b');px(13,17,3,9,'#ae8b62');
+  px(6,19,4,8,'#896449');px(22,19,4,8,'#896449');
+  px(15,22,4,4,'#c0a174');
+  // Axe on shoulder.
+  px(23,0,2,18,'#6a4a36');px(20,0,7,4,'#a6c3cc');px(19,2,10,3,'#667e91');
+  px(26,3,3,4,'#cadbe0');
+ }else{
+  // Red-haired female archer in green cape and steel armor.
+  px(5,12,22,17,'#1c493d');px(3,19,7,11,'#276c51');px(23,19,7,11,'#276c51');
+  px(10,24,5,8,'#677e87');px(18,24,5,8,'#677e87');
+  px(8,11,17,15,'#435664');px(12,13,10,9,'#a7b9bf');
+  px(7,12,5,6,'#7b919d');px(23,12,5,6,'#7b919d');
+  px(11,2,12,12,'#8f4329');px(10,4,14,9,'#b5653e');
+  px(12,6,10,9,'#e5ad87');px(11,6,3,9,'#ad5b35');px(21,6,4,12,'#a95835');
+  px(20,14,3,10,'#ba6e43');px(13,9,2,1,'#2b2935');px(19,9,2,1,'#2b2935');
+  px(11,14,11,3,'#23573f');px(11,22,11,3,'#785338');
+  // Bow and string.
+  px(27,10,2,17,'#9b6a3c');px(28,8,2,4,'#b88a55');px(28,26,2,4,'#b88a55');
+  px(27,11,1,16,'#e6d5a7');
+ }
+ text(n.name,x,y-106,'#fff1b5',15);
+}
 function building(x,y,w,h,roof){
 rect(x,y,w,h,'#c9a980');
 rect(x+12,y+23,24,34,'#5d463e');
@@ -299,10 +341,7 @@ ellipse(600,418,48,24,'#b1e9f1');
 rect(593,350,14,65,'#c8c7c0');
 ellipse(600,345,20,16,'#e2dfd3');
 text('น้ำพุเมือง',600,485,'#fff',13);
-npcs.forEach(n=>{
-character(n.x,n.y,n.color);
-text(n.name,n.x,n.y-70,'#fff1b5',15)
-});
+npcs.forEach(drawNPC);
 mobs.forEach(m=>{
 if(!m.alive){
 if(--m.respawn<=0){m.alive=true;m.hp=m.maxHp;}
