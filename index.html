@@ -44,7 +44,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v21</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v22</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -95,7 +95,7 @@ x:110+(i*113)%740,y:380+(i*71)%150,
 alive:true,hp:100,maxHp:100,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0,vy:0
 }));
 // One additional plant-element rabbit, independent of the five Poring.
-mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:160,maxHp:160,respawn:0,cooldown:70,vx:0,vy:0});
+mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:70,vx:0,vy:0});
 function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
 const MAX_LEVEL=550;
@@ -359,7 +359,7 @@ mobs.forEach(m=>{
    m.y+=((p.y-m.y)/distance)*step;
  }
  if(distance<44&&m.cooldown<=0&&invulnerable<=0){
-   const damage=(m.type==='plantRabbit'?8:5)+Math.floor(Math.random()*7);
+   const damage=m.type==='plantRabbit'?25:5+Math.floor(Math.random()*7);
    p.hp=Math.max(0,p.hp-damage);
    m.cooldown=105;
    invulnerable=35;
