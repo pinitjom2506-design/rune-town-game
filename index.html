@@ -23,7 +23,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v3</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v4</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -94,7 +94,7 @@ updateHUD()
 }
 function attack(){
 if(dead){say('คุณหมดสติ! กดคุยเพื่อฟื้นคืนชีพ');return}
-hit=12;
+hit=20;
 let m=mobs.find(m=>m.alive&&near(p,m,75));
 if(!m){say('ไม่มีมอนสเตอร์อยู่ใกล้');return}
 m.alive=false;m.respawn=240;
@@ -286,8 +286,21 @@ text('Poring',m.x,m.y-32+bounce,'#ffe2ed',12)
 if(invulnerable===0||tick%10<5)character(p.x,p.y,dead?'#666666':'#b96650',true);
 if(dead){rect(260,260,440,76,'#15151ddd');text('คุณหมดสติ!',480,291,'#ff7788',28);text('กด คุย หรือ E เพื่อฟื้นคืนชีพ',480,321,'#ffffff',17)}
 if(hit>0){
-hit--;g.strokeStyle='#ffe67b';g.lineWidth=5;
-g.beginPath();g.arc(p.x,p.y-22,34,-1.5,1.2);g.stroke()
+hit--;
+g.save();
+g.translate(p.x,p.y-30);
+g.lineCap='butt';
+const radius=65+(20-hit)*3;
+for(const side of [-1,1]){
+ for(const layer of [[26,'#164db4'],[19,'#159ce5'],[12,'#24e6ff'],[5,'#f5ffff']]){
+  g.strokeStyle=layer[1];g.lineWidth=layer[0];
+  g.beginPath();
+  if(side===1)g.arc(32,0,radius,-1.7,1.1);
+  else g.arc(-32,0,radius,2.1,4.9);
+  g.stroke();
+ }
+}
+g.restore()
 }
 updateHUD();
 requestAnimationFrame(draw)
