@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v33</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v34</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -244,8 +244,8 @@ $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ${swords[p.weapon]?.name||
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
 $('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
-$('skillBtn').disabled=p.lv<2||!['normal','gold'].includes(p.weapon);
-$('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':p.weapon==='gold'?'กด C: พายุคมดาบทอง ฟันรัวรอบตัว (คูลดาวน์ 8 วินาที)':p.weapon!=='normal'?'สกิลยังไม่พร้อมสำหรับดาบนี้':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
+$('skillBtn').disabled=p.lv<2||!['normal','gold','diamond'].includes(p.weapon);
+$('skillBtn').title=p.lv<2?'ปลดล็อกเมื่อเลเวล 2':p.weapon==='diamond'?'กด C: ฟันไขว้เพชร 2 ครั้ง (คูลดาวน์ 7 วินาที)':p.weapon==='gold'?'กด C: พายุคมดาบทอง ฟันรัวรอบตัว (คูลดาวน์ 8 วินาที)':p.weapon!=='normal'?'สกิลยังไม่พร้อมสำหรับดาบนี้':'กด C: พุ่งฟันคลื่นดาบ (คูลดาวน์ 6 วินาที)';
 $('quest').textContent=p.activeQuest===1?`เควส 1: Poring ${Math.min(5,p.kills)}/5`:p.activeQuest===2?`เควส 2: กระต่าย ${Math.min(3,p.rabbitKills)}/3`:'เควส: คุยกับ NPC เพื่อเลือกเควส';
 }
 function revive(){p.hp=p.max;p.x=480;p.y=340;dead=false;invulnerable=120;say('ฟื้นคืนชีพแล้ว! ได้รับการคุ้มครองชั่วคราว');updateHUD()}
@@ -355,6 +355,44 @@ function attack(){
  damageMonster(m,damage);
  if(m.alive)say('โจมตี '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! '+damage+' DMG');
 }
+let diamondSkill=null;
+function drawDiamondSkill(){
+ if(!diamondSkill)return;
+ const fx=diamondSkill;
+ fx.frame++;
+ const t=fx.frame;
+ if((t===1||t===13)&&fx.hits<2){
+  fx.hits++;
+  const damage=Math.round(swords.diamond.damage*levelDamageMultiplier()*1.5);
+  for(const m of mobs){
+   if(!m.alive)continue;
+   const dx=m.x-fx.x,dy=m.y-fx.y;
+   if(Math.hypot(dx,dy)<195)damageMonster(m,damage);
+  }
+ }
+ g.save();g.translate(fx.x,fx.y-28);g.globalCompositeOperation='lighter';
+ const phase=t<13?0:1,progress=((t-1)%13)/13;
+ const angle=phase===0?-.65:.65;
+ for(let k=0;k<3;k++){
+  const r=90+k*26+progress*24;
+  const start=phase===0?Math.PI*.9:Math.PI*.05;
+  g.beginPath();
+  g.ellipse(0,0,r,r*.58,angle,start+progress*.5,start+2.5+progress*.5);
+  g.strokeStyle=k===0?'#e9ffff':k===1?'#43caff':'#295aff';
+  g.lineWidth=15-k*4;g.shadowColor='#168aff';g.shadowBlur=24;g.stroke();
+ }
+ for(let i=0;i<28;i++){
+  const a=i*2.399+t*.2;
+  const r=25+(i*31+t*9)%180;
+  const x=Math.cos(a)*r,y=Math.sin(a)*r*.65;
+  g.save();g.translate(x,y);g.rotate(a+t*.07);
+  g.fillStyle=i%3?'#2c9fff':'#e6ffff';
+  g.beginPath();g.moveTo(0,-(6+i%5));g.lineTo(3,0);g.lineTo(0,6+i%5);g.lineTo(-3,0);g.closePath();g.fill();
+  g.restore();
+ }
+ g.restore();
+ if(t>=26)diamondSkill=null;
+}
 let goldenSkill=null;
 function drawGoldenSkill(){
  if(!goldenSkill)return;
@@ -390,6 +428,13 @@ function useSkill(){
  if($('inventory').classList.contains('open')||$('shop').classList.contains('open')||$('questMenu').classList.contains('open'))return;
  const now=Date.now();
  if(now<skillReadyAt){say('สกิลกำลังคูลดาวน์ อีก '+Math.ceil((skillReadyAt-now)/1000)+' วินาที');return}
+ if(p.weapon==='diamond'){
+  skillReadyAt=now+7000;
+  diamondSkill={x:p.x,y:p.y,frame:0,hits:0};
+  invulnerable=Math.max(invulnerable,38);
+  say('💎 ฟันไขว้เพชร! คมดาบสีน้ำเงินฟันสองครั้ง!');
+  return;
+ }
  if(p.weapon==='gold'){
   skillReadyAt=now+8000;
   goldenSkill={x:p.x,y:p.y,frame:0,hits:0};
@@ -725,6 +770,7 @@ if(slash&&slash.life>0){
 }
 
 drawGoldenSkill();
+drawDiamondSkill();
 updateHUD();
 requestAnimationFrame(draw)
 }
