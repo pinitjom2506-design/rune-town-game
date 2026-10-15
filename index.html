@@ -28,7 +28,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <button onclick="save()">บันทึกเกม</button>
 </header>
 <div id="game">
-<canvas id="c" width="480" height="300"></canvas>
+<canvas id="c" width="960" height="600"></canvas>
 <div id="hud">
 <strong>Novice</strong>
 <div>HP <span id="hpt">100/100</span></div>
@@ -52,7 +52,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <script>
 const canvas=document.getElementById('c'),g=canvas.getContext('2d');
 g.imageSmoothingEnabled=false;
-g.scale(.5,.5);
+
 const $=id=>document.getElementById(id);
 let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0};
 try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
@@ -129,6 +129,7 @@ g.font=`bold ${size}px monospace`;g.textAlign='center';
 g.lineWidth=3;g.strokeStyle='#34333c';g.strokeText(t,x,y);
 g.fillStyle=color;g.fillText(t,x,y)
 }
+const knightSprite=new Image();knightSprite.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAABICAYAAACwc3YrAAADaUlEQVR42mNgGAWjYBQMacBILYPy26f/J0X9xMpMqtjNNNRjgIUSzaLKRv+poff13XOMIzYGGCmNgbaeDoocUFVSMbJjACUPfPzx/z8DAwMDPwcj3hBxjsz8Ty0H6JmZMzCYmf9nYGBg2Lt8OuOIi4Hh44Gdpy//x8YejQF6ZuITl6+M5oFRD9CzLXT28EGGs4cPUsUhxrb2ozFAMbjZa0CSevXiC6N5gKoxQI0QHVAPwEBibj5OufmTJw5+D8BAoLs1nL1+59HBFwPkFH3kFpejmRgZ7F0+nXGprNH/AjYcnRQD3MXppVMnMcQo6VIy4mpCu5vqMvYsWoe1WW3b3EuT0DxcW4xTriQuiHG0MTdk84C5oRZdHIPNnpPnr9G+Hrjy/SvJenQ4uQeuFPq1bi5KCAlWNZFsxswwPwYtdVWKY3jA80BrVS1tYmCprNH/5xQYrMDJilPuwfffKHw/z2A4e9P2tdRPQoQyEjUBsmcYGBgYqtuayavI3gTFM8w2MyRooZKGGpytr41g69S34c70jVUMF6/egjTyFi5iYGBgYIhOS2NYOmsWXrveP7nKSNfWKKkgOi0NkYSxeEZQRvs/uocGlQdI8cygjAFyPDPaJ0YGsIzJwMDAoEOkOnIBLEMPyiSUGhWIwp+9bD3+GLi+Mfs/w7MZKBJyUywZpiPxMxf9oLpDYUXogCah74dWYhWfI8HA0FZhjSFe1XGUgQGHnmHRH0BPPshi2IpTjBio6T4GZ7eUWsHZU2/chYgJfRp8pZCm/1RGWAOOQR4h+a/q6miXklQwe9l6jFKHYClECjj4ipkiB1KqH71RR7IHur/9ZWBgYGBokhAiqPZYBmI4Eaael48fUYJ9/Ua9JLRUlvDKkwufaJeBCTWlKUpCtHQ4uidgDTf0dI/Lg0wD6XgxSUmKYwIjBoIeMjIY8PExXPj0ieECA+1DXkxSkuHV8+dEJy/0XhnTQCYZXDFBSiwQTELRj88xDqQn8IU+PAlhK4Ho5XBykw7OPEBNhyObpS7hQrCYnsLIzpDz/ydJdsDbQPgcjhxDu8P9SbJgQU89Y0JJI0nLdzauWEVwOAUlDxAKdXonJ/+IsKHbmEMPdXyhP+hHJQg5nqzG3IEdOxjooWfIJyGaeGAw1A1ke2AwOn5YJKFRMNAAAGmLML+7T97HAAAAAElFTkSuQmCC';
 function character(x,y,color,player=false){
  if(!player){
   ellipse(x,y+7,19,7,'#0005');
@@ -138,45 +139,17 @@ function character(x,y,color,player=false){
   ellipse(x,y-52,15,8,'#795448');
   return;
  }
- // Armored knight: dark steel helmet, red cape, sword and heraldic shield.
- g.save();g.translate(x,y);
- const bob=!dead&&(keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright'])?Math.sin(tick/5)*2:0;
- g.translate(0,bob);
- ellipse(0,9,25,8,'#0006');
- g.fillStyle='#a71f31';g.beginPath();g.moveTo(-10,-45);g.lineTo(-34,-26);g.lineTo(-33,5);g.lineTo(-16,-2);g.lineTo(-8,8);g.lineTo(15,-29);g.closePath();g.fill();
- g.strokeStyle='#6e1729';g.lineWidth=2;g.stroke();
- // armored boots
- rect(-16,-10,13,18,'#283341');rect(5,-10,13,18,'#283341');
- rect(-18,4,16,7,'#586c7b');rect(4,4,17,7,'#586c7b');
- rect(-16,-9,13,4,'#8c9ca7');rect(5,-9,13,4,'#8c9ca7');
- // torso and pauldrons
- rect(-15,-40,30,35,'#293645');
- rect(-13,-38,26,25,'#637785');rect(-9,-34,18,14,'#8a9ba6');
- g.strokeStyle='#1b2634';g.lineWidth=3;g.strokeRect(-13,-38,26,25);
- ellipse(-17,-37,11,12,'#566d7d');ellipse(17,-37,11,12,'#566d7d');
- ellipse(-19,-39,6,5,'#a4b7bf');ellipse(19,-39,6,5,'#a4b7bf');
- rect(-13,-13,26,6,'#563b30');rect(-3,-14,7,8,'#d7b875');
- // helmet
- ellipse(0,-56,16,21,'#26333e');
- ellipse(-2,-61,13,15,'#758d9a');
- g.fillStyle='#1b2530';g.beginPath();g.moveTo(-13,-59);g.lineTo(13,-59);g.lineTo(9,-44);g.lineTo(0,-40);g.lineTo(-9,-44);g.closePath();g.fill();
- rect(-9,-56,18,5,'#080e18');rect(-7,-54,14,2,'#e7ae5d');
- rect(-3,-50,6,10,'#7e919c');
- // red scarf
- g.fillStyle='#b01e2c';g.beginPath();g.moveTo(-16,-43);g.lineTo(13,-43);g.lineTo(18,-35);g.lineTo(-10,-34);g.closePath();g.fill();
- rect(-3,-34,10,17,'#9e1d2a');
- // sword at left
- g.save();g.translate(-24,-30);g.rotate(hit>0?-.65:.25);
- rect(-3,-40,7,39,'#c4d5df');rect(-1,-37,3,32,'#f4faff');
- g.fillStyle='#e6f0f5';g.beginPath();g.moveTo(-3,-40);g.lineTo(.5,-53);g.lineTo(4,-40);g.fill();
- rect(-12,-4,23,5,'#d6b47a');rect(-2,1,5,13,'#49352d');g.restore();
- // shield at right, with lion-like crest
- g.fillStyle='#1b2835';g.beginPath();g.moveTo(12,-44);g.lineTo(36,-37);g.lineTo(33,-11);g.lineTo(23,0);g.lineTo(12,-14);g.closePath();g.fill();
- g.strokeStyle='#9cabb8';g.lineWidth=4;g.stroke();
- g.fillStyle='#647989';g.beginPath();g.moveTo(17,-39);g.lineTo(31,-34);g.lineTo(29,-15);g.lineTo(23,-7);g.lineTo(17,-17);g.fill();
- text('♞',24,-18,'#d5dbe1',15);
- g.restore();
- text('YOU',x,y-87,'#ffe77e',12);
+ // Native pixel sprite, nearest-neighbor rendering (no blur).
+ const moving=!dead&&(keys['w']||keys['a']||keys['s']||keys['d']||keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright']);
+ const bob=moving?Math.round(Math.sin(tick/5)*2):0;
+ ellipse(x,y+7,23,7,'#0006');
+ if(knightSprite.complete&&knightSprite.naturalWidth){
+   g.imageSmoothingEnabled=false;
+   g.drawImage(knightSprite,Math.round(x-36),Math.round(y-102+bob),72,108);
+ }else{
+   rect(x-15,y-65,30,55,'#536a7b');rect(x-15,y-42,30,8,'#a71f31');
+ }
+ text('YOU',x,y-105+bob,'#ffe77e',12);
 }
 function building(x,y,w,h,roof){
 rect(x,y,w,h,'#c9a980');
