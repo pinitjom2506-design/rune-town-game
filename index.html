@@ -30,7 +30,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v10</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v11</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -231,11 +231,26 @@ function drawNPC(n){
  const px=(a,b,w,h,c)=>rect(ox+a*unit,oy+b*unit,w*unit,h*unit,c);
  ellipse(x,y+7,23,7,'#0005');
  if(n.name==='Kafra'){
-  // Dark steel knight with red cape, shield and sword.
-  for(let j=0;j<12;j++)px(4-j%3,12+j,7+j%3,3,j%2?'#a72236':'#cf3445');
-  knightRows.forEach((line,j)=>{for(let i=0;i<24;i++){const c=knightPalette[line[i]];if(c)px(i,j,1,1,c)}});
-  px(0,16,2,13,'#cbdde7');px(0,14,2,3,'#f3f8fc');px(0,29,4,2,'#c7a25f');
-  px(19,15,7,11,'#182432');px(20,16,5,9,'#758d9b');px(22,18,2,5,'#d2d6da');
+  // Royal guardian: white/silver plate, royal-blue cape, gold trim and winged helm.
+  // Separate silhouette and palette from the player's dark armor and red cape.
+  px(3,14,8,14,'#173d87');px(1,20,7,10,'#245fc1');px(23,14,8,14,'#173d87');px(26,21,6,9,'#245fc1');
+  px(9,26,6,6,'#263f62');px(19,26,6,6,'#263f62');
+  px(8,29,8,3,'#b4cce3');px(18,29,8,3,'#b4cce3');
+  px(9,13,17,14,'#283f63');px(11,14,13,12,'#d5e5f2');
+  px(13,16,9,7,'#88aac8');px(15,16,5,5,'#eef9ff');
+  px(7,13,6,7,'#a7c7e1');px(23,13,6,7,'#a7c7e1');
+  px(6,15,5,4,'#e4f4ff');px(25,15,5,4,'#e4f4ff');
+  px(12,23,13,3,'#b18a44');px(17,23,4,4,'#fff0aa');
+  px(10,3,16,12,'#344d73');px(12,1,12,12,'#c2d8e8');
+  px(14,2,8,4,'#f4fbff');px(13,7,12,3,'#21334f');
+  px(16,9,6,5,'#779ab5');px(18,10,2,5,'#e6f2ff');
+  // Distinct gold crown crest and silver helmet wings.
+  px(17,0,4,5,'#e7bd59');px(18,0,2,3,'#fff0a0');
+  px(7,3,6,3,'#e2f1ff');px(5,1,4,3,'#9fc5e4');
+  px(25,3,6,3,'#e2f1ff');px(29,1,4,3,'#9fc5e4');
+  // Tall spear instead of the player's sword and shield.
+  px(30,7,2,24,'#6b4c2b');px(29,2,4,7,'#d5eafa');
+  px(30,0,2,4,'#f9ffff');px(28,8,6,2,'#d5b45b');
  }else if(n.name==='ร้านค้า'){
   // Hooded bearded ranger / axe merchant.
   px(7,11,16,17,'#46362f');px(4,12,5,14,'#283748');px(22,12,5,14,'#283748');
