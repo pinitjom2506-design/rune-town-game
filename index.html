@@ -67,11 +67,16 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 #tutorialBox strong{color:#ffe08c;display:block;margin-bottom:5px}
 #tutorialBox.done{display:none}
 @media(max-width:600px){#tutorialBox{top:76px;left:5px;max-width:185px;padding:5px;font-size:10px}}
+#congrats{position:absolute;left:50%;top:37%;transform:translate(-50%,-50%) scale(.85);z-index:30;pointer-events:none;opacity:0;transition:opacity .22s,transform .22s;text-align:center;width:min(92%,610px);padding:22px 18px;background:linear-gradient(145deg,#18334bf2,#352c4bef);border:4px solid #ffe08c;border-radius:16px;box-shadow:0 0 38px #f8cc5680,0 14px 36px #0009}
+#congrats.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#congratsTitle{font-size:clamp(27px,5vw,48px);font-weight:900;color:#ffe58d;text-shadow:3px 3px #6b3d23}
+#congratsDetail{font-size:clamp(15px,2.8vw,23px);margin-top:8px;color:#fff}
+@media(max-width:600px){#congrats{padding:12px 8px;top:36%}}
 </style>
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v31</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v32</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -90,6 +95,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <div id="inventory"><div id="inventoryPanel"><h2>🎒 ช่องเก็บของ</h2><p id="inventoryInfo"></p><div id="inventorySlots"></div><button onclick="closeInventory()">ปิดช่องเก็บของ ✕</button></div></div>
 <div id="saveMenu"><div id="savePanel"><h2>💾 บันทึก / โหลดเกม</h2><p>เลือกช่องเซฟเพื่อบันทึกหรือกลับมาเล่นจากจุดเดิม</p><div id="saveSlots"></div><p id="saveNotice"></p><button onclick="closeSaveMenu()">ปิด ✕</button></div></div>
 <div id="mainMenu"><div id="menuPanel"><h1>⚔ RUNE TOWN</h1><p>PIXEL ART RPG · ผจญภัยในโลกแฟนตาซี</p><div id="menuHome"><button class="menuButton" onclick="startGame()">▶ เล่นเกม</button><button class="menuButton" onclick="showKeySettings()">⚙ ตั้งค่าปุ่มควบคุม</button><p>เลือกเล่นเพื่อเข้าสู่เกมหลัก</p></div><div id="keySettings"><h3>⌨ ตั้งค่าปุ่มควบคุม</h3><div id="keyRows"></div><p id="keyHint">แตะปุ่มที่ต้องการเปลี่ยน แล้วกดปุ่มใหม่บนคีย์บอร์ด</p><button onclick="resetKeySettings()">คืนค่าปุ่มเริ่มต้น</button><button onclick="hideKeySettings()">← กลับเมนู</button></div></div></div>
+<div id="congrats" role="status" aria-live="polite"><div id="congratsTitle"></div><div id="congratsDetail"></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
 <div id="controls">
 <button id="saveBtn" onclick="openSaveMenu()">💾 บันทึก</button>
@@ -155,6 +161,21 @@ mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,
 mobs.push({x:725,y:525,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:95,vx:0,vy:0});
 if(bootSave&&Array.isArray(bootSave.worldMobs)&&bootSave.worldMobs.length===mobs.length){bootSave.worldMobs.forEach((saved,i)=>{if(saved&&typeof saved.x==='number'&&typeof saved.y==='number')Object.assign(mobs[i],saved)})}
 function say(t){$('msg').textContent=t}
+let congratsTimer=null,congratsQueue=[],congratsVisible=false;
+function showCongratulations(title,detail){
+ congratsQueue.push({title,detail});
+ if(!congratsVisible)nextCongratulations();
+}
+function nextCongratulations(){
+ if(!congratsQueue.length){congratsVisible=false;$('congrats').classList.remove('show');return}
+ congratsVisible=true;
+ const item=congratsQueue.shift();
+ $('congratsTitle').textContent=item.title;
+ $('congratsDetail').textContent=item.detail;
+ $('congrats').classList.add('show');
+ clearTimeout(congratsTimer);
+ congratsTimer=setTimeout(()=>{$('congrats').classList.remove('show');congratsTimer=setTimeout(nextCongratulations,280)},2800);
+}
 function updateTutorial(){
  const stage=p.tutorialStage||0;
  const box=$('tutorialBox');
@@ -274,8 +295,11 @@ function completeQuest(){
  const questExp=p.lv>=MAX_LEVEL?0:Math.round((id===2?1000:500)*(swords[p.weapon]?.exp||1)*levelExpMultiplier());
  const questZeny=id===2?500:200;
  p.zeny+=questZeny;p.exp+=questExp;
+ const questOldLevel=p.lv;
  while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
  if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
+ if(p.lv>questOldLevel)showCongratulations('🌟 LEVEL UP!','ยินดีด้วย! เลเวล '+questOldLevel+' → '+p.lv);
+ showCongratulations('🎉 QUEST COMPLETE!','เควส '+id+' สำเร็จ! +'+questZeny+' Zeny · +'+questExp+' EXP');
  if(id===1&&p.tutorialStage===1)p.tutorialStage=2;
  p.kills=0;p.rabbitKills=0;p.activeQuest=0;
  updateTutorial();
@@ -307,11 +331,13 @@ function defeatMonster(m,damage){
  m.alive=false;m.respawn=240;
  const expGain=p.lv>=MAX_LEVEL?0:Math.round(20*(swords[p.weapon]?.exp||1)*levelExpMultiplier()*(m.type==='plantRabbit'?2:1));
  p.exp+=expGain;p.zeny+=m.type==='plantRabbit'?20:10;
+ const monsterOldLevel=p.lv;
  if(m.type==='plantRabbit'){if(p.activeQuest===2)p.rabbitKills++}
  else if(p.activeQuest===1)p.kills++;
  say('กำจัด '+(m.type==='plantRabbit'?'กระต่ายธาตุพืช':'Poring')+'! +'+expGain+' EXP');
  while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max}
  if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0}
+ if(p.lv>monsterOldLevel)showCongratulations('🌟 LEVEL UP!','ยินดีด้วย! เลเวล '+monsterOldLevel+' → '+p.lv);
  completeQuest();updateHUD();updateTutorial();
 }
 function damageMonster(m,damage){
