@@ -76,7 +76,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v37</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v38</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -317,7 +317,7 @@ function chooseQuest(id){
  updateHUD();saveSilent();
 }
 function interact(){
- if(dead){revive();return}
+ if(dead){say('💤 หมดสติ! กด E บนคีย์บอร์ดเพื่อฟื้นคืนชีพ');return}
  if($('inventory').classList.contains('open')){closeInventory();return}
  if($('shop').classList.contains('open'))return;
  if($('questMenu').classList.contains('open'))return;
@@ -462,6 +462,7 @@ function useSkill(){
  updateHUD();
 }
 document.addEventListener('keydown',e=>{
+ if(!menuActive&&(e.code==='KeyE'||e.key.toLowerCase()==='e')){e.preventDefault();if(e.repeat)return;if(dead){revive();return}interact();return;}
  if((e.code==='KeyC'||e.key.toLowerCase()==='c')&&!menuActive){e.preventDefault();if(e.repeat)return;useSkill();return;}
  const key=e.key.toLowerCase();
  if(menuActive){
@@ -480,7 +481,7 @@ document.addEventListener('keydown',e=>{
  if(['arrowup','arrowdown','arrowleft','arrowright',' ',...Object.values(bindings)].includes(key))e.preventDefault();
  if(e.repeat)return;
  if(isActionKey('attack',key))attack();
- if(isActionKey('talk',key)||key==='e')interact();
+ if(isActionKey('talk',key)&&key!=='e')interact();
  if(key==='c'||e.code==='KeyC')useSkill();
  if(isActionKey('inventory',key))toggleInventory();
 });
