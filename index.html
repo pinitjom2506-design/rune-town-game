@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v51 — Rebuilt Pixel Art 3D</title>
+<title>Rune Town v52 — Ultra Pixel Art 3D</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL 3D v51</strong>
+<strong>⚔️ RUNE TOWN — ULTRA PIXEL 3D v52</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game"><div id="renderMode" style="position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:6;background:#16283bdc;color:#fff4cc;padding:4px 9px;border:1px solid #ffe09c;border-radius:6px;font:12px Tahoma,Arial;pointer-events:none">กำลังโหลดฉาก 3D...</div>
@@ -754,20 +754,21 @@ function initTown3D(){
  const camera=new T.OrthographicCamera(-24,24,15,-15,.1,200);
  camera.position.set(0,30,32);camera.lookAt(0,1,0);
  const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setSize(960,600,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
- renderer.shadowMap.enabled=false;
+ renderer.setSize(960,600,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.88;
+ renderer.shadowMap.enabled=false;renderer.setClearColor(0x86bce2,1);
  renderer.outputColorSpace=T.SRGBColorSpace;
  scene.add(new T.HemisphereLight(0xddeeff,0x786c59,.82));
- const sun=new T.DirectionalLight(0xffd69b,1.4);sun.position.set(-13,32,16);sun.castShadow=false;sun.shadow.mapSize.set(512,512);
+ const sun=new T.DirectionalLight(0xffd69b,1.25);sun.position.set(-13,32,16);sun.castShadow=false;sun.shadow.mapSize.set(512,512);
  sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;sun.shadow.bias=-.0004;scene.add(sun);
  const mat=(color,roughness=1,metalness=0)=>new T.MeshStandardMaterial({color,roughness,metalness});
  // Crisp hand-painted pixel textures applied to actual 3D geometry.
+ const randTexture=(x,y)=>{const v=Math.sin(x*12.9898+y*78.233)*43758.5453;return v-Math.floor(v)};
  const pixelTexture=(palette,pattern,repeatX=1,repeatY=1)=>{
-  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
+  const canvas=document.createElement('canvas');canvas.width=128;canvas.height=128;
   const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;
-  c.fillStyle=palette[0];c.fillRect(0,0,64,64);
-  for(let y=0;y<64;y+=8)for(let x=0;x<64;x+=8){
-   const seed=((x*19+y*37+x*y*3)>>>2)%palette.length;
+  c.fillStyle=palette[0];c.fillRect(0,0,128,128);
+  for(let y=0;y<128;y+=8)for(let x=0;x<128;x+=8){
+   const seed=Math.floor(randTexture(x,y)*palette.length);
    c.fillStyle=palette[seed];c.fillRect(x,y,8,8);
    if(pattern==='stone'){
     c.fillStyle='#756a5b';c.fillRect(x,y+7,8,1);
@@ -899,16 +900,7 @@ function initTown3D(){
   for(let i=0;i<8;i++)cube(x-2.45+i*.7,1.7,z+1.2,.42,.35,.45,i%2?gold:mat(0xb35c3c));
  }
  stall(-16,6);stall(16,6);
- // 3D trees with trunks and dense spherical canopies.
- function tree(x,z,r){
-  cylinder(x,2,z,.34,.46,4,wood,9);
-  for(let i=0;i<18;i++){
-   const a=i*2.4,rr=rand(i+x*3)*r*.7;
-   const sphere=add(new T.SphereGeometry(r*(.36+rand(i*7)*.17),9,7),i%3?leaf:leafLight,x+Math.cos(a)*rr,4.3+rand(i*4)*1.5,z+Math.sin(a)*rr);
-   sphere.scale.y=.75;
-  }
- }
- tree(-12,-9,2.5);tree(12,-9,2.8);tree(-22,13,3.5);tree(22,13,3.6);
+ // Ultra town plaza: trees intentionally removed to keep the view clear.
  // Circular stone fountain and sculptural statue.
  const fx=9,fz=8;
  cylinder(fx,.32,fz,4.7,4.7,.65,stoneDark,48);
@@ -946,6 +938,55 @@ function initTown3D(){
   const vine=cube(x,y,z,.32,.25,.23,i%3?leaf:leafLight);
   vine.rotation.z=rand(i*19)*.7;
  }
+ // ULTRA decorative pass: masonry highlights, forged gate trim, roof ridges, market wares.
+ const iron=mat(0x343b45),silver=mat(0xc6d1d1),warm=mat(0xffcc72),copper=mat(0xad693d);
+ for(let row=0;row<8;row++)for(let col=0;col<26;col++){
+  const xx=-14.1+col*1.1+(row%2)*.5, yy=.7+row*.93;
+  if(Math.abs(xx)<6.1)continue;
+  const mark=cube(xx,yy,-13.43,.73,.045,.07,row%3===0?stoneLight:stoneDark);
+  mark.castShadow=false;
+ }
+ for(const xx of [-8.2,8.2]){
+  for(let j=0;j<10;j++){
+   const angle=j*Math.PI/5;
+   const x=xx+Math.cos(angle)*2.38,z=-13+Math.sin(angle)*2.38;
+   cube(x,9.5,z,.18,.13,.25,stoneLight);
+  }
+  cylinder(xx,12,-13,.72,.95,.65,gold,8);
+ }
+ // Ornate gilded arch keystone.
+ cube(0,8.62,-10.25,.75,1.2,.38,gold);
+ cube(0,8.15,-10.02,.3,.6,.15,blue);
+ // Three-dimensional metal-bound crates and pottery at market stalls.
+ for(const [xx,zz] of [[-17,5],[-15,8],[15,8],[17,5],[-18,12],[18,12]]){
+  cylinder(xx,.57,zz,.43,.33,1.1,copper,10);
+  cylinder(xx,1.15,zz,.46,.46,.13,iron,10);
+  cylinder(xx,.23,zz,.45,.45,.13,iron,10);
+ }
+ for(const [xx,zz] of [[-15,6],[-14,6],[15,6],[14,6]]){
+  cylinder(xx,1.9,zz,.26,.18,.5,mat(0x6bb7ca),9);
+  cylinder(xx,2.17,zz,.12,.2,.15,gold,9);
+ }
+ // Pixel-cut marble fountain coping with raised carved blocks.
+ for(let i=0;i<36;i++){
+  const ang=i*Math.PI/18,xx=fx+Math.cos(ang)*4.48,zz=fz+Math.sin(ang)*4.48;
+  const cap=cube(xx,.92,zz,.85,.18,.62,i%3===0?stoneLight:stone);
+  cap.rotation.y=-ang;
+ }
+ // Lamp sconces on the castle wall (emissive accents, no costly dynamic lights).
+ const flame=new T.MeshStandardMaterial({color:0xffc468,emissive:0xf19b38,emissiveIntensity:.45});
+ for(const xx of [-12,-4.7,4.7,12]){
+  cube(xx,3.8,-10.9,.45,.75,.5,iron);
+  cube(xx,4.05,-10.55,.32,.55,.26,flame);
+  cube(xx,4.52,-10.9,.65,.17,.65,gold);
+ }
+ // Handcrafted blue banners with a small heraldic gold cross.
+ for(const xx of [-12,12]){
+  cube(xx,6.7,-11.45,1.15,2.5,.15,blue);
+  cube(xx,6.8,-11.33,.2,1.45,.12,gold);
+  cube(xx,7.1,-11.32,.85,.17,.12,gold);
+ }
+
  // Lanterns and blue royal banners.
  function lamp(x,z){
   cylinder(x,2,z,.09,.14,4,stoneDark,8);
@@ -999,7 +1040,7 @@ function initTown3D(){
   cube(fx+Math.cos(a)*r,.94,fz+Math.sin(a)*r,.12,.02,.16,i%3?flowerWhite:mat(0x7ad9f5));
  }
 
- scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ Pixel Art 3D v51';
+ scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ ULTRA Pixel Art 3D v52';
  }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null;document.getElementById('renderMode').textContent='⚠ 2D สำรอง (WebGL ไม่พร้อม)'}
 }
 function drawTown3D(){
