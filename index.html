@@ -71,7 +71,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v30</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v31</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -294,9 +294,9 @@ function chooseQuest(id){
 function interact(){
  if(dead){revive();return}
  if($('inventory').classList.contains('open')){closeInventory();return}
- if($('shop').classList.contains('open')){closeShop();return}
- if($('questMenu').classList.contains('open')){closeQuestMenu();return}
- const n=npcs.find(n=>near(p,n,75));
+ if($('shop').classList.contains('open'))return;
+ if($('questMenu').classList.contains('open'))return;
+ const n=npcs.filter(n=>near(p,n,105)).sort((a,b)=>Math.hypot(p.x-a.x,p.y-a.y)-Math.hypot(p.x-b.x,p.y-b.y))[0];
  if(!n){say('เดินเข้าใกล้ NPC แล้วกดคุย');return}
  if(n.name==='Kafra'){p.hp=p.max;if(p.tutorialStage===2){p.tutorialStage=3;updateTutorial();saveSilent();say('🎉 Tutorial สำเร็จ! Kafra ฮีล HP เต็มแล้ว ขอให้สนุกกับ Rune Town!')}else say('Kafra: ฟื้นฟู HP ให้แล้วค่ะ!')}
  else if(n.name==='ร้านค้า'){openShop();say('ร้านค้า: เลือกซื้อดาบทองหรือดาบเพชร')}
@@ -372,7 +372,7 @@ document.addEventListener('keydown',e=>{
  if(['arrowup','arrowdown','arrowleft','arrowright',' ',...Object.values(bindings)].includes(key))e.preventDefault();
  if(e.repeat)return;
  if(isActionKey('attack',key))attack();
- if(isActionKey('talk',key))interact();
+ if(isActionKey('talk',key)||key==='e')interact();
  if(isActionKey('skill',key))useSkill();
  if(isActionKey('inventory',key))toggleInventory();
 });
@@ -528,7 +528,7 @@ tick++;
 g.imageSmoothingEnabled=false;
 let dx=(keys['arrowright']||keys[bindings.right]?1:0)-(keys['arrowleft']||keys[bindings.left]?1:0);
 let dy=(keys['arrowdown']||keys[bindings.down]?1:0)-(keys['arrowup']||keys[bindings.up]?1:0);
-if((dx||dy)&&!dead&&!menuActive){
+if((dx||dy)&&!dead&&!menuActive&&!$('questMenu').classList.contains('open')&&!$('shop').classList.contains('open')&&!$('inventory').classList.contains('open')&&!$('saveMenu').classList.contains('open')){
 const mag=Math.hypot(dx,dy);facing={x:dx/mag,y:dy/mag};
 let speed=2.7/Math.hypot(dx,dy);
 p.x=Math.max(25,Math.min(935,p.x+dx*speed));
