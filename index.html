@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v49 — Optimized 3D</title>
+<title>Rune Town v50 — Pixel Art 3D</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — OPTIMIZED 3D v49</strong>
+<strong>⚔️ RUNE TOWN — PIXEL 3D v50</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game"><div id="renderMode" style="position:absolute;top:9px;left:50%;transform:translateX(-50%);z-index:6;background:#16283bdc;color:#fff4cc;padding:4px 9px;border:1px solid #ffe09c;border-radius:6px;font:12px Tahoma,Arial;pointer-events:none">กำลังโหลดฉาก 3D...</div>
@@ -754,21 +754,48 @@ function initTown3D(){
  const camera=new T.OrthographicCamera(-24,24,15,-15,.1,200);
  camera.position.set(0,35,25);camera.lookAt(0,0,0);
  const renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
- renderer.setSize(960,600,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.72;
+ renderer.setSize(640,400,false);renderer.setPixelRatio(1);renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=.82;
  renderer.shadowMap.enabled=false;
  renderer.outputColorSpace=T.SRGBColorSpace;
  scene.add(new T.HemisphereLight(0xddeeff,0x786c59,.68));
  const sun=new T.DirectionalLight(0xffe7c1,1.15);sun.position.set(-13,32,16);sun.castShadow=false;sun.shadow.mapSize.set(512,512);
  sun.shadow.camera.left=-30;sun.shadow.camera.right=30;sun.shadow.camera.top=25;sun.shadow.camera.bottom=-25;sun.shadow.bias=-.0004;scene.add(sun);
  const mat=(color,roughness=1,metalness=0)=>new T.MeshStandardMaterial({color,roughness,metalness});
- const stone=mat(0xc6b9a2),stoneLight=mat(0xe3d7bd),stoneDark=mat(0x827b70),wood=mat(0x74513c),plaster=mat(0xe9d5b1),roof=mat(0xa34e35),roofLight=mat(0xd87951),blue=mat(0x2d5c9a),gold=mat(0xe9bc55,.42,.6),leaf=mat(0x4f9d55),leafLight=mat(0x8cbd67),water=mat(0x3cbedc,.18,.25);
+ // Crisp hand-painted pixel textures applied to actual 3D geometry.
+ const pixelTexture=(palette,pattern,repeatX=1,repeatY=1)=>{
+  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;
+  const c=canvas.getContext('2d');c.imageSmoothingEnabled=false;
+  c.fillStyle=palette[0];c.fillRect(0,0,64,64);
+  for(let y=0;y<64;y+=8)for(let x=0;x<64;x+=8){
+   const seed=((x*19+y*37+x*y*3)>>>2)%palette.length;
+   c.fillStyle=palette[seed];c.fillRect(x,y,8,8);
+   if(pattern==='stone'){
+    c.fillStyle='#756a5b';c.fillRect(x,y+7,8,1);
+    if((x+y)%16===0)c.fillRect(x+7,y,1,7);
+    c.fillStyle='#fff2d0';c.fillRect(x+1,y+1,5,1);
+   }else if(pattern==='roof'){
+    c.fillStyle='#71372c';c.fillRect(x,y+6,8,2);
+    c.fillStyle='#e78b55';c.fillRect(x+1,y+1,5,2);
+   }else if(pattern==='wood'){
+    c.fillStyle='#49362c';c.fillRect(x+1,y+3,6,1);
+   }
+  }
+  const t=new T.CanvasTexture(canvas);t.magFilter=T.NearestFilter;t.minFilter=T.NearestMipmapNearestFilter;
+  t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(repeatX,repeatY);t.colorSpace=T.SRGBColorSpace;return t;
+ };
+ const stone=new T.MeshStandardMaterial({map:pixelTexture(['#c4b6a0','#d6c8ad','#b3a58f','#e3d6bd'],'stone',2,2),roughness:1});
+ const stoneLight=new T.MeshStandardMaterial({map:pixelTexture(['#d8c8ab','#eee0c4','#c7b89e','#f3e6ce'],'stone'),roughness:1});
+ const stoneDark=mat(0x81756a),wood=new T.MeshStandardMaterial({map:pixelTexture(['#7b5137','#956340','#68412f','#a67550'],'wood')});
+ const plaster=mat(0xe2d0b1);
+ const roof=new T.MeshStandardMaterial({map:pixelTexture(['#a95136','#c16b43','#8e402f','#da8050'],'roof',2,2)});
+ const roofLight=mat(0xd87951),blue=mat(0x254e8e),gold=mat(0xe9bc55,.65,.1),leaf=mat(0x3e874d),leafLight=mat(0x80b957),water=mat(0x268ab5,.3,.05);
  const rand=(n)=>{const a=Math.sin(n*127.1+78.3)*43758.5453;return a-Math.floor(a)};
  const add=(geometry,material,x,y,z,cast=true)=>{const mesh=new T.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.castShadow=false;mesh.receiveShadow=false;scene.add(mesh);return mesh};
  const cube=(x,y,z,w,h,d,m)=>add(new T.BoxGeometry(w,h,d),m,x,y,z);
  const cylinder=(x,y,z,r1,r2,h,m,segments=18)=>add(new T.CylinderGeometry(r1,r2,h,segments),m,x,y,z);
- const ground=cube(0,-.3,0,51,.6,34,mat(0xc7b99d));
+ const ground=cube(0,-.3,0,51,.6,34,mat(0x978e78));
  // Individual perspective-correct cobbles with varied height and color.
- const paving=[mat(0xe8ddc8),mat(0xd3c5ad),mat(0xf0e5cf),mat(0xb8ab95)];
+ const paving=[mat(0xc9bba3),mat(0xa99e8c),mat(0xe2d1b2),mat(0xb9ab96)];
  // Batch all 3,626 cobblestones into four instanced meshes (4 draw calls).
  const geoPave=new T.BoxGeometry(.65,.05,.64),temp=new T.Object3D();
  const tiles=[[],[],[],[]];
@@ -866,7 +893,45 @@ function initTown3D(){
   cube(x,5.65,z,1.1,.15,.15,gold);
   cube(x,4.65,z,.16,1.7,.16,gold);
  }
- scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ 3D WebGL';
+
+// Pixel-art 3D architectural details: tiled eaves, glowing windows, flower planters and masonry.
+ const ember=mat(0xffc978),flowerPink=mat(0xe994b4),flowerWhite=mat(0xfff1d0),flowerYellow=mat(0xffd468);
+ const darkGlass=mat(0x2c4658),moss=mat(0x4e8753);
+ function planter(x,z){
+  cube(x,.52,z,1.2,1.0,.75,wood);
+  cube(x,1.07,z,1.32,.16,.86,stoneDark);
+  for(let i=0;i<8;i++){
+   const dx=(rand(i+x*3)-.5)*.9,dz=(rand(i+z*5)-.5)*.6;
+   const bud=add(new T.BoxGeometry(.23,.23,.23),i%3===0?flowerPink:i%3===1?flowerWhite:flowerYellow,x+dx,1.35+rand(i*8)*.28,z+dz);
+   bud.rotation.y=i*.5;
+   cube(x+dx,1.13,z+dz,.25,.22,.3,moss);
+  }
+ }
+ for(const [x,z] of [[-11,-9],[11,-9],[-10,5],[10,5],[-7,12],[16,12],[-15,13],[15,-3]])planter(x,z);
+ // Low stone garden walls emphasize real height, occlusion and depth.
+ for(const side of [-1,1]){
+  for(let i=0;i<9;i++){
+   const z=2+i*1.45,x=side*(13.2+i*.18);
+   cube(x,.52,z,1.65,1.0,.8,stone);
+   cube(x,1.07,z,1.78,.22,.94,stoneLight);
+  }
+ }
+ // Wooden crates and market clutter.
+ for(const [x,z] of [[-14,8],[-17,10],[17,8],[14,10],[-19,-2],[19,-2]]){
+  cube(x,.52,z,1.05,1.05,1.05,wood);
+  cube(x,.9,z+.54,1.1,.13,.13,stoneDark);
+  cube(x,.25,z+.54,1.1,.13,.13,stoneDark);
+ }
+ // Gate stairs and bright blue runner, physically raised above cobblestones.
+ for(let i=0;i<5;i++)cube(0,.09+i*.09,-10.9+i*.66,6.2,.18+i*.04,.66,stoneDark);
+ for(let i=0;i<5;i++)cube(0,.22+i*.09,-10.9+i*.66,3.1,.035,.61,blue);
+ // Pixel highlights on the fountain basin.
+ for(let i=0;i<35;i++){
+  const a=i*2.399,r=rand(i*7)*3.6;
+  cube(fx+Math.cos(a)*r,.94,fz+Math.sin(a)*r,.12,.02,.16,i%3?flowerWhite:mat(0x7ad9f5));
+ }
+
+ scene3D=scene;renderer3D=renderer;camera3D=camera;town3DRendered=false;document.getElementById('renderMode').textContent='✓ Pixel Art 3D';
  }catch(err){console.warn('3D unavailable, using original town:',err);scene3D=null;renderer3D=null;document.getElementById('renderMode').textContent='⚠ 2D สำรอง (WebGL ไม่พร้อม)'}
 }
 function drawTown3D(){
@@ -874,7 +939,7 @@ function drawTown3D(){
  try{
  if(water3D&&!town3DRendered){water3D.material.emissive.setHex(0x06303b);water3D.material.emissiveIntensity=.08}
  if(!town3DRendered){renderer3D.render(scene3D,camera3D);town3DRendered=true}
- g.drawImage(renderer3D.domElement,0,0,960,600);
+ g.save();g.imageSmoothingEnabled=false;g.drawImage(renderer3D.domElement,0,0,960,600);g.restore();
  }catch(e){console.warn(e);renderer3D=null;drawTownBackdrop()}
 }
 
