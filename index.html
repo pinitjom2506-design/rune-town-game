@@ -30,7 +30,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v12</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v13</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 <button onclick="save()">บันทึกเกม</button>
 </header>
@@ -64,6 +64,8 @@ g.imageSmoothingEnabled=false;
 const $=id=>document.getElementById(id);
 let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0,weapon:'normal',owned:['normal']};
 try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
+p.lv=Math.min(550,Math.max(1,Math.floor(Number(p.lv)||1)));
+if(p.lv===550)p.exp=0;
 if(!Array.isArray(p.owned))p.owned=['normal'];
 if(!['normal','gold','diamond'].includes(p.weapon))p.weapon='normal';
 let keys={},tick=0,hit=0,invulnerable=0,dead=false,slash=null,facing={x:1,y:0},damageTexts=[];
@@ -78,12 +80,13 @@ alive:true,hp:100,maxHp:100,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0
 }));
 function say(t){$('msg').textContent=t}
 function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
-function expRequired(level){return Math.floor(50*Math.pow(level,1.65))}
+const MAX_LEVEL=550;
+function expRequired(level){return level>=MAX_LEVEL?0:Math.floor(50*Math.pow(level,1.65))}
 function updateHUD(){
 $('stats').textContent=`Lv.${p.lv} | Zeny ${p.zeny} | ดาบ${p.weapon==='diamond'?'เพชร':p.weapon==='gold'?'ทอง':'ธรรมดา'}`;
 $('hpt').textContent=`${p.hp}/${p.max}`;
 $('hp').style.width=(p.hp/p.max*100)+'%';
-$('exp').style.width=(p.exp/expRequired(p.lv)*100)+'%';
+$('exp').style.width=((p.lv>=MAX_LEVEL?100:p.exp/expRequired(p.lv)*100))+'%';
 $('quest').textContent=`เควส: กำจัด Poring ${Math.min(5,p.kills)}/5`;
 }
 function revive(){p.hp=p.max;p.x=480;p.y=340;dead=false;invulnerable=120;say('ฟื้นคืนชีพแล้ว! ได้รับการคุ้มครองชั่วคราว');updateHUD()}
@@ -129,12 +132,13 @@ m.hp=Math.max(0,m.hp-damage);
 damageTexts.push({x:m.x,y:m.y-48,value:damage,life:48});
 if(m.hp>0){say('โจมตี Poring! สร้างความเสียหาย '+damage);return}
 m.alive=false;m.respawn=240;
-p.exp+=20;p.zeny+=10;p.kills++;
+if(p.lv<MAX_LEVEL)p.exp+=20;p.zeny+=10;p.kills++;
 say('กำจัด Poring! '+damage+' DMG, +20 EXP, +10 Zeny');
-while(p.exp>=expRequired(p.lv)){
+while(p.lv<MAX_LEVEL&&p.exp>=expRequired(p.lv)){
 p.exp-=expRequired(p.lv);p.lv++;p.max+=20;p.hp=p.max;
 say('LEVEL UP! เลเวล '+p.lv)
 }
+if(p.lv>=MAX_LEVEL){p.lv=MAX_LEVEL;p.exp=0;}
 updateHUD()
 }
 document.addEventListener('keydown',e=>{
