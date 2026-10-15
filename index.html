@@ -26,11 +26,18 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 #dpad [data-key="ArrowRight"]{grid-column:3;grid-row:2}
 #actions{position:absolute;right:12px;bottom:76px;display:flex;gap:6px;align-items:end}
 #saveBtn{position:absolute;top:10px;right:10px}
+#resetBtn{position:absolute;top:58px;right:10px;background:#e99788dd;border-color:#8c3535}
 #msg{bottom:5px;left:165px;right:165px;padding:7px;font-size:12px;min-height:37px}
-@media(max-width:600px){#controls button{min-width:34px;min-height:33px;padding:3px;font-size:12px}#dpad{left:5px;bottom:42px;grid-template-columns:repeat(3,35px);grid-template-rows:repeat(2,34px);gap:2px}#actions{right:5px;bottom:47px;gap:3px}#hud{top:5px;left:5px;padding:5px;font-size:10px}.bar{width:100px;height:8px}#saveBtn{top:5px;right:5px}#msg{left:116px;right:111px;bottom:3px;font-size:9px;padding:3px;min-height:24px}}
+@media(max-width:600px){#controls button{min-width:34px;min-height:33px;padding:3px;font-size:12px}#dpad{left:5px;bottom:42px;grid-template-columns:repeat(3,35px);grid-template-rows:repeat(2,34px);gap:2px}#actions{right:5px;bottom:47px;gap:3px}#hud{top:5px;left:5px;padding:5px;font-size:10px}.bar{width:100px;height:8px}#saveBtn{top:5px;right:5px}#resetBtn{top:43px;right:5px}#msg{left:116px;right:111px;bottom:3px;font-size:9px;padding:3px;min-height:24px}}
 
 #shop{position:absolute;inset:0;background:#081522c9;display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
 #shop.open{display:flex}
+#saveMenu{position:absolute;inset:0;background:#081522e8;display:none;align-items:center;justify-content:center;z-index:20;padding:12px}
+#saveMenu.open{display:flex}
+#savePanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:18px;width:min(470px,100%);max-height:95%;overflow:auto}
+.saveSlot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid #65768a}
+.saveSlot span{font-size:13px;flex:1}.saveSlot button{font-size:12px;padding:7px}
+#saveNotice{font-size:12px;color:#ffdf8a;min-height:20px}
 #inventory{position:absolute;inset:0;background:#081522df;display:none;align-items:center;justify-content:center;z-index:13;padding:16px}
 #inventory.open{display:flex}
 #inventoryPanel{background:#26374b;border:3px solid #e6c47c;border-radius:12px;padding:18px;width:min(420px,100%)}
@@ -51,7 +58,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — PIXEL ART v26</strong>
+<strong>⚔️ RUNE TOWN — PIXEL ART v27</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -67,9 +74,11 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 <div id="shop"><div id="shopPanel"><h2>⚔ ร้านขายอาวุธ</h2><p id="shopBalance"></p><div class="shopItem"><span>🗡️ ดาบทอง<br><small>1,500 Zeny · ระยะโจมตี 105</small></span><button onclick="buySword('gold')">ซื้อ / สวมใส่</button></div><div class="shopItem"><span>💎 ดาบเพชร<br><small>5,000 Zeny · ระยะโจมตี 145</small></span><button onclick="buySword('diamond')">ซื้อ / สวมใส่</button></div><p id="shopNotice"></p><button onclick="closeShop()">ปิดร้านค้า ✕</button></div></div>
 <div id="questMenu"><div id="questPanel"><h2>📜 เลือกเควส</h2><p id="questStatus">เลือกเควสที่ต้องการทำ</p><button onclick="chooseQuest(1)">เควส 1: กำจัด Poring 5/5</button><button onclick="chooseQuest(2)">เควส 2: กำจัดกระต่ายธาตุพืช 3/3</button><button onclick="closeQuestMenu()">ปิด ✕</button></div></div>
 <div id="inventory"><div id="inventoryPanel"><h2>🎒 ช่องเก็บของ</h2><p id="inventoryInfo"></p><div id="inventorySlots"></div><button onclick="closeInventory()">ปิดช่องเก็บของ ✕</button></div></div>
+<div id="saveMenu"><div id="savePanel"><h2>💾 บันทึก / โหลดเกม</h2><p>เลือกช่องเซฟเพื่อบันทึกหรือกลับมาเล่นจากจุดเดิม</p><div id="saveSlots"></div><p id="saveNotice"></p><button onclick="closeSaveMenu()">ปิด ✕</button></div></div>
 <div id="msg">ยินดีต้อนรับสู่ Rune Town! ใช้ WASD หรือปุ่มลูกศรเดิน</div>
 <div id="controls">
-<button id="saveBtn" onclick="save()">💾 บันทึก</button>
+<button id="saveBtn" onclick="openSaveMenu()">💾 บันทึก</button>
+<button id="resetBtn" onclick="resetGame()">🔄 รีเซ็ต</button>
 <div id="dpad">
 <button data-key="ArrowUp">▲</button>
 <button data-key="ArrowLeft">◀</button>
@@ -85,7 +94,8 @@ g.imageSmoothingEnabled=false;
 
 const $=id=>document.getElementById(id);
 let p={x:480,y:340,hp:100,max:100,lv:1,exp:0,zeny:100,kills:0,dir:0,weapon:'normal',owned:['normal']};
-try{Object.assign(p,JSON.parse(localStorage.getItem('rune-save'))||{})}catch(e){}
+let bootSave=null;try{bootSave=JSON.parse(localStorage.getItem('rune-save'))}catch(e){}
+if(bootSave)Object.assign(p,bootSave);
 p.lv=Math.min(550,Math.max(1,Math.floor(Number(p.lv)||1)));
 if(p.lv===550)p.exp=0;
 if(!Array.isArray(p.owned))p.owned=['normal'];
@@ -105,8 +115,44 @@ alive:true,hp:100,maxHp:100,respawn:0,cooldown:Math.floor(Math.random()*90),vx:0
 // One additional plant-element rabbit, independent of the five Poring.
 mobs.push({x:805,y:465,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:70,vx:0,vy:0});
 mobs.push({x:725,y:525,type:'plantRabbit',alive:true,hp:600,maxHp:600,respawn:0,cooldown:95,vx:0,vy:0});
+if(bootSave&&Array.isArray(bootSave.worldMobs)&&bootSave.worldMobs.length===mobs.length){bootSave.worldMobs.forEach((saved,i)=>{if(saved&&typeof saved.x==='number'&&typeof saved.y==='number')Object.assign(mobs[i],saved)})}
 function say(t){$('msg').textContent=t}
-function save(){localStorage.setItem('rune-save',JSON.stringify(p));say('บันทึกเกมแล้ว!')}
+function captureGame(){return {...JSON.parse(JSON.stringify(p)),worldMobs:JSON.parse(JSON.stringify(mobs))}}
+function save(){saveSilent();say('บันทึกความคืบหน้าปัจจุบันแล้ว')}
+function openSaveMenu(){
+ $('shop').classList.remove('open');$('questMenu').classList.remove('open');$('inventory').classList.remove('open');
+ $('saveMenu').classList.add('open');$('saveNotice').textContent='เลือกช่องเพื่อบันทึกหรือโหลด';renderSaveSlots();
+}
+function closeSaveMenu(){$('saveMenu').classList.remove('open')}
+function renderSaveSlots(){
+ const root=$('saveSlots');root.textContent='';
+ for(let i=1;i<=3;i++){
+  let data=null;try{data=JSON.parse(localStorage.getItem('rune-slot-'+i))}catch(e){}
+  const row=document.createElement('div');row.className='saveSlot';
+  const label=document.createElement('span');
+  label.textContent='เซฟ '+i+(data?' — Lv.'+data.lv+' · '+data.zeny+' Zeny':' — ช่องว่าง');
+  row.appendChild(label);
+  const saveBtn=document.createElement('button');saveBtn.textContent='💾 Save';
+  saveBtn.onclick=()=>saveSlot(i);row.appendChild(saveBtn);
+  if(data){const loadBtn=document.createElement('button');loadBtn.textContent='▶ โหลด';loadBtn.onclick=()=>loadSlot(i);row.appendChild(loadBtn)}
+  root.appendChild(row);
+ }
+}
+function saveSlot(i){
+ if(localStorage.getItem('rune-slot-'+i)&&!confirm('เขียนทับเซฟ '+i+' หรือไม่?'))return;
+ try{localStorage.setItem('rune-slot-'+i,JSON.stringify(captureGame()));saveSilent();$('saveNotice').textContent='บันทึกเซฟ '+i+' สำเร็จแล้ว';renderSaveSlots()}
+ catch(e){$('saveNotice').textContent='บันทึกไม่สำเร็จ: พื้นที่จัดเก็บไม่เพียงพอ'}
+}
+function loadSlot(i){
+ const raw=localStorage.getItem('rune-slot-'+i);if(!raw)return;
+ if(!confirm('โหลดเซฟ '+i+'? ความคืบหน้าปัจจุบันจะถูกแทนที่'))return;
+ try{const data=JSON.parse(raw);if(!data||!Number.isFinite(data.lv)||!Array.isArray(data.owned))throw Error('invalid save');localStorage.setItem('rune-save',raw);location.reload()}
+ catch(e){$('saveNotice').textContent='ไฟล์เซฟไม่ถูกต้อง ไม่สามารถโหลดได้'}
+}
+function resetGame(){
+ if(!confirm('รีเซ็ตเกมและเริ่มใหม่ตั้งแต่เลเวล 1? ช่องเซฟ 1–3 จะยังอยู่'))return;
+ localStorage.removeItem('rune-save');location.reload();
+}
 const MAX_LEVEL=550;
 function expRequired(level){return level>=MAX_LEVEL?0:50*Math.pow(2,level-1)}
 function levelExpMultiplier(){return Math.pow(1.25,p.lv-1)}
@@ -136,9 +182,10 @@ function buySword(kind){
  $('shopNotice').textContent='สวมใส่'+item.name+'แล้ว!';
  saveSilent();
 }
-function saveSilent(){localStorage.setItem('rune-save',JSON.stringify(p))}
+function saveSilent(){localStorage.setItem('rune-save',JSON.stringify(captureGame()))}
 function closeInventory(){$('inventory').classList.remove('open')}
 function toggleInventory(){
+ if($('saveMenu').classList.contains('open')){closeSaveMenu();return}
  if($('inventory').classList.contains('open')){closeInventory();return}
  $('shop').classList.remove('open');$('questMenu').classList.remove('open');
  const slots=$('inventorySlots');slots.textContent='';
@@ -244,6 +291,7 @@ function useSkill(){
 }
 document.addEventListener('keydown',e=>{
 const key=e.key.toLowerCase();
+if($('saveMenu').classList.contains('open')){if(key==='escape')closeSaveMenu();return}
 keys[key]=true;
 if(['arrowup','arrowdown','arrowleft','arrowright',' ','e','c','i'].includes(key))e.preventDefault();
 if(e.repeat)return;
