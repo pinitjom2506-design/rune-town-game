@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rune Town v43 — Detailed Swords</title>
+<title>Rune Town v44 — White Lightning Sword</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#152638;color:white;font-family:Tahoma,Arial}
@@ -79,7 +79,7 @@ canvas{width:100%;display:block;touch-action:none;background:#83b970;image-rende
 </head>
 <body>
 <header>
-<strong>⚔️ RUNE TOWN — REALISTIC SWORDS v43</strong>
+<strong>⚔️ RUNE TOWN — WHITE LIGHTNING v44</strong>
 <span id="stats">Lv.1 | Zeny 100</span>
 </header>
 <div id="game">
@@ -599,7 +599,7 @@ function character(x,y,color,player=false){
  normal:{edge:'#e5f5ff',core:'#a5bacb',shadow:'#526c82',glow:'#a9e5ff',gem:'#8fc8ee'},
  gold:{edge:'#fff3a3',core:'#eab94c',shadow:'#966027',glow:'#ffcd4b',gem:'#fff5d1'},
  diamond:{edge:'#f4ffff',core:'#64dfff',shadow:'#2379b8',glow:'#3bcfff',gem:'#ffffff'},
- lightning:{edge:'#fffbb7',core:'#f8dd46',shadow:'#ac8520',glow:'#fbe94b',gem:'#eaffff'},
+ lightning:{edge:'#ffffff',core:'#eafaff',shadow:'#9ebdd8',glow:'#35baff',gem:'#61d9ff'},
  emerald:{edge:'#caffd8',core:'#45d999',shadow:'#187955',glow:'#49ffb4',gem:'#edffb8'},
  ruby:{edge:'#ffd3dd',core:'#f44d71',shadow:'#98233f',glow:'#ff496c',gem:'#fff0d5'},
  void:{edge:'#e2c5ff',core:'#965ce4',shadow:'#3d226c',glow:'#aa67ff',gem:'#d7baff'},
@@ -625,6 +625,35 @@ function character(x,y,color,player=false){
  swordPath([[-1,-12],[-1,-57],[0,-64],[2,-54],[2,-12]],'#ffffff8a');
  g.strokeStyle='#ffffffbd';g.lineWidth=1.2;g.beginPath();g.moveTo(-5,-13);g.lineTo(-5,-51);g.lineTo(0,-68);g.stroke();
  g.strokeStyle=metal.shadow;g.lineWidth=1;g.beginPath();g.moveTo(0,-15);g.lineTo(0,-57);g.stroke();
+ // Animated cyan-blue electrical arcs surrounding the WHITE lightning sword.
+ if(p.weapon==='lightning'){
+  const z=tick*.21;
+  g.save();
+  g.globalCompositeOperation='lighter';
+  for(let arc=0;arc<4;arc++){
+   const side=arc%2===0?-1:1;
+   const offset=arc*1.7;
+   g.beginPath();
+   for(let j=0;j<=11;j++){
+    const yy=-9-j*5.1;
+    const wave=Math.sin(z+j*1.65+offset)*5+Math.sin(z*1.9+j*.83+offset)*3;
+    const xx=side*(9+Math.sin(j*.7+offset)*2)+wave;
+    if(j===0)g.moveTo(xx,yy);else g.lineTo(xx,yy);
+   }
+   g.strokeStyle=arc%2===0?'#17a9ff':'#73eaff';
+   g.lineWidth=arc%2===0?2.8:2.1;
+   g.shadowColor='#27a9ff';g.shadowBlur=15;g.stroke();
+   g.strokeStyle='#efffff';g.lineWidth=.9;g.shadowBlur=5;g.stroke();
+  }
+  for(let i=0;i<7;i++){
+   const yy=-12-((tick*2.1+i*13)%61);
+   const xx=Math.sin(tick*.24+i*2.4)*12;
+   g.fillStyle=i%2?'#8cefff':'#fff';
+   g.shadowColor='#39bbff';g.shadowBlur=9;
+   g.fillRect(xx,yy,2.5,2.5);
+  }
+  g.restore();
+ }
  // Decorative fuller and engraved runic markings.
  for(let j=0;j<3;j++){const yy=-23-j*10;P(-2,yy,4,2,j%2?metal.gem:'#f4faff')}
  if(p.weapon!=='normal'){
